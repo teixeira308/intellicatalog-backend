@@ -6,7 +6,7 @@ const categoryRoute = require('./routes/CategoryRouter');
 const productRoute = require('./routes/ProductRouter');
 const uploadImageRouter = require('./routes/uploadImageRouter');
 const storeRouter = require('./routes/storeRouter');
-const uploadStoreImageRouter = require('./routes/uploadStoreImageRouter');
+const uploadStoreImageRouter = require('./routes/UploadStoreImageRouter');
 
 
 // Middleware para analisar o corpo das solicitações e habilitar CORS
