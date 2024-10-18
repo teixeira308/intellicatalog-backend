@@ -118,4 +118,73 @@ getStore = async (req, res) => {
     }
 }
 
-module.exports = { createStore, listAllStores, alterStore, deleteStore, getStore }
+const getStoreConfigs = async(req,res) =>{
+    const { id } = req.params; // Captura o ID da pessoa da URL
+
+    try {
+        const connection = await pool.getConnection();
+        const [store] = await connection.query('SELECT * FROM store_config WHERE store_id = ?', id); // Consulta uma pessoa com base no ID
+        connection.release();
+
+        if (store.length === 0) { // Se não houver pessoa com o ID especificado, retorna 404
+            return res.status(404).json({ message: 'Store não encontrada' });
+        }
+
+        Logmessage('Store recuperada do banco de dados: '+ JSON.stringify(store));
+
+        // Retorna a pessoa encontrada
+        res.status(200).json(store[0]);
+    } catch (error) {
+        Logmessage('Erro ao recuperar a store do banco de dados:', error);
+        res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+}
+
+const createStoreConfigs = async (req, res) => {
+    const storeData = req.body;
+    const { id } = req.params; // Captura o ID da pessoa da URL
+    Logmessage("Criar store, dados do body: " + JSON.stringify(storeData)); // Ajustei para stringify para mostrar o objeto completo
+    storeData.store_id = id; 
+    try {
+        const connection = await pool.getConnection();
+        const [result] = await connection.query('INSERT INTO store_config SET ?', storeData);
+        connection.release();
+
+        // 'result' conterá informações sobre a inserção, incluindo o ID gerado
+        const insertedId = result.insertId; // Aqui está o ID gerado automaticamente pelo MySQL
+
+        Logmessage('Dados da store inseridos no banco de dados. ID: ' + insertedId);
+        res.status(201).json({  id: insertedId,...storeData }); // Retorna os dados da categoria com o ID inserido
+    } catch (error) {
+        Logmessage('Erro ao inserir dados da store no banco de dados: ' + error);
+        res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+}
+
+const alterStoreConfigs = async (req, res) => {
+    const { id } = req.params; // Captura o ID do parâmetro da rota
+    const newData = req.body; // Novos dados da pessoa a serem atualizados
+    
+    try {
+        // Verifica se o registro com o ID especificado existe
+        const [existingStoreConfig] = await pool.query('SELECT * FROM stores WHERE id = ?', [id]);
+        if (existingStoreConfig.length === 0) {
+            return res.status(404).json({ message: 'Store não encontrada' });
+        }
+
+        // Atualiza os dados da pessoa no banco de dados
+        const connection = await pool.getConnection();
+        await connection.query('UPDATE store_config SET ? WHERE store_id = ?', [newData, id]);
+        connection.release();
+
+        Logmessage('Dados da store ID '+id+' atualizados no banco de dados: '+ JSON.stringify(newData));
+        res.status(200).json({ message: 'Dados da Store atualizados com sucesso' });
+    } catch (error) {
+        Logmessage('Erro ao atualizar dados da Store no banco de dados: '+ error);
+        res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+}
+
+
+
+module.exports = { createStore, listAllStores, alterStore, deleteStore, getStore, getStoreConfigs, createStoreConfigs, alterStoreConfigs }

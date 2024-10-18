@@ -10,4 +10,10 @@ router.get('/stores/:id', login.required, StoreController.getStore );
 router.delete('/stores/:id', login.required,StoreController.deleteStore);
 router.put('/stores/:id', login.required,StoreController.alterStore);
 
+//store config
+router.get('/stores/:id/config', login.required, StoreController.getStoreConfigs );
+router.post('/stores/:id/config', login.required, StoreController.createStoreConfigs );
+router.put('/stores/:id/config', login.required,StoreController.alterStoreConfigs);
+
+
 module.exports = router;
