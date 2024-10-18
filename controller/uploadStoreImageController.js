@@ -8,6 +8,10 @@ const path = require('path');
 
 const { Logmessage } = require("../helper/Tools");
 
+const dotenv = require('dotenv');
+
+dotenv.config();
+
 
 
 const getStoreImageByUserId = async (req, res) => {
@@ -158,12 +162,12 @@ const deleteStoreImageFromDatabase = async (store_image_id, req, res) => {
 const getStoreImagesByStoreId = async (req, res) => {
     const { store_id } = req.params; // Acessar o parâmetro de caminho
     const { store_image_id } = req.params; // Acessar o parâmetro de caminho
-
+    const user_id = req.user.userId;
     try {
 
         // Consultar no banco de dados se o usuário possui acesso ao documento
         const connection = await pool.getConnection();
-        const [rows] = await connection.query('SELECT * FROM store_images WHERE store_id = ? AND id = ?', [store_id, store_image_id]);
+        const [rows] = await connection.query('SELECT * FROM store_images WHERE user_id = ? AND store_id = ? AND id = ?', [user_id, store_id, store_image_id]);
         connection.release();
 
         if (!rows.length) {
@@ -186,14 +190,24 @@ const getStoreImageDownload = async (req, res) => {
     try {
         // Verificar se o documento existe na pasta de uploads e se pertence ao usuário
         const filePath = path.join(__dirname, '..', 'uploads', arquivo);
-        console.log(filePath)
+        //console.log(filePath)
         if (!fs.existsSync(filePath)) {
             return res.status(404).json({ message: 'Documento não encontrado' });
         }
 
         // Consultar no banco de dados se o usuário possui acesso ao documento
+        let query = ""
+        let parametros = []
+        if (user_id == process.env.ADMIN_USER) {
+            console.log("entrou admin download")
+            query = 'SELECT * FROM store_images WHERE  store_id = ? AND nomearquivo = ?'
+            parametros = [store_id, arquivo]
+        } else {
+            query = 'SELECT * FROM store_images WHERE  user_id = ? AND store_id = ? AND nomearquivo = ?'
+            parametros = [user_id,store_id, arquivo]
+        }
         const connection = await pool.getConnection();
-        const [rows] = await connection.query('SELECT * FROM store_images WHERE  user_id = ? AND store_id = ? AND nomearquivo = ?', [user_id,store_id, arquivo]);
+        const [rows] = await connection.query(query, parametros);
         connection.release();
 
         if (!rows.length) {
@@ -207,5 +221,39 @@ const getStoreImageDownload = async (req, res) => {
         res.status(500).json({ message: 'Erro ao baixar o arquivo' });
     }
 };
+const getStoreImagesByStore = async (req, res) => {
+    const { store_id } = req.params; // Acessar o parâmetro de caminho
+    const user_id = req.user.userId;
+    console.log(user_id);
 
-module.exports = { getStoreImageByUserId, UploadFile, uploadSingleFile, deleteStoreImageById, getStoreImagesByStoreId, getStoreImageDownload };
+    try {
+
+        // Consultar no banco de dados se o usuário possui acesso ao documento
+        const connection = await pool.getConnection();
+        let query = "";
+        if (user_id == process.env.ADMIN_USER) {
+
+            query = 'SELECT * FROM store_images WHERE store_id = ?'
+        }
+        else {
+
+            query = 'SELECT * FROM store_images WHERE store_id = ? AND user_id = ?'
+
+        }
+        const [rows] = await connection.query(query, [store_id, user_id]);
+        connection.release();
+
+        if (!rows.length) {
+            return res.status(403).json({ message: 'Usuário não tem acesso a este documento' });
+        }
+
+        res.status(200).json(rows);
+
+    } catch (error) {
+        console.error('Erro ao consultar a imagem:', error);
+        res.status(500).json({ message: 'Erro ao consultar a imagem' });
+    }
+
+};
+
+module.exports = { getStoreImageByUserId, UploadFile, uploadSingleFile, deleteStoreImageById, getStoreImagesByStoreId, getStoreImageDownload, getStoreImagesByStore };

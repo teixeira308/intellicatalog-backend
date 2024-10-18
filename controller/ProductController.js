@@ -62,7 +62,8 @@ listAllProducts = async (req, res) => {
         const offset = (page - 1) * pageSize;
         const totalPages = Math.ceil(totalCount[0].total / pageSize);
 
-        const [results] = await connection.query('SELECT * FROM products LIMIT ?, ?', [offset, pageSize]);
+        // TO DO - PAGINATION const [results] = await connection.query('SELECT * FROM products LIMIT ?, ?', [offset, pageSize]);
+        const [results] = await connection.query('SELECT * FROM products ');
         connection.release();
         var now = new Date();
         //Logmessage('Lista de pessoas recuperada do banco de dados:'+ results);
@@ -162,7 +163,8 @@ simpleListAllProducts = async (req, res) => {
         const offset = (page - 1) * pageSize;
         const totalPages = Math.ceil(totalCount[0].total / pageSize);
 
-        const [results] = await connection.query('SELECT * FROM products WHERE category_id = ? LIMIT ?, ?', [category_id,offset, pageSize]);
+        // TO DO - PAGINATION -const [results] = await connection.query('SELECT * FROM products WHERE category_id = ? LIMIT ?, ?', [category_id,offset, pageSize]);
+        const [results] = await connection.query('SELECT * FROM products WHERE category_id = ? ', [category_id]);
         connection.release();
         var now = new Date();
         //Logmessage('Lista de pessoas recuperada do banco de dados:'+ results);
