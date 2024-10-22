@@ -154,4 +154,35 @@ simpleListAllCategories = async (req, res) => {
 }
 
 
-module.exports = { createCategory, listAllCategories, alterCategory, deleteCategory, getCategory, simpleListAllCategories}
+const reorderCategory = async (req, res) => {
+    const { categorias } = req.body; // Espera-se que o corpo contenha um array de categorias
+
+ 
+    try {
+        const connection = await pool.getConnection();
+
+        // Usar uma transação para garantir que todas as atualizações sejam feitas ou nenhuma delas
+        await connection.beginTransaction();
+
+        // Atualizar a ordem das categorias
+        for (const categoria of categorias) {
+            await connection.query('UPDATE categories SET catalog_order = ? WHERE id = ?', [categoria.catalog_order, categoria.id]);
+        }
+
+        // Se tudo correr bem, confirma a transação
+        await connection.commit();
+        connection.release();
+
+        Logmessage('Ordem das categorias atualizada com sucesso');
+        res.status(200).json({ message: 'Ordem das categorias atualizada com sucesso.' });
+    } catch (error) {
+        // Se ocorrer um erro, reverte a transação
+        await connection.rollback();
+        Logmessage('Erro ao atualizar a ordem das categorias:', error);
+        res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+};
+
+
+
+module.exports = { createCategory, listAllCategories, alterCategory, deleteCategory, getCategory, simpleListAllCategories, reorderCategory}
