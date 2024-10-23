@@ -86,7 +86,7 @@ alterProduct = async (req, res) => {
 
     try {
         // Verifica se o registro com o ID especificado existe
-        const [existingProduct] = await pool.query('SELECT * FROM products WHERE status="ativo" and id = ?', [id]);
+        const [existingProduct] = await pool.query('SELECT * FROM products WHERE id = ?', [id]);
         if (existingProduct.length === 0) {
             return res.status(404).json({ message: 'Product não encontrada' });
         }
@@ -158,13 +158,13 @@ simpleListAllProducts = async (req, res) => {
 
     try {
         const connection = await pool.getConnection();
-        const [totalCount] = await connection.query('SELECT COUNT(*) as total FROM products where user_id= ?',category_id);
+        const [totalCount] = await connection.query('SELECT COUNT(*) as total FROM products where status="ativo" and user_id= ?',category_id);
 
         const offset = (page - 1) * pageSize;
         const totalPages = Math.ceil(totalCount[0].total / pageSize);
 
         // TO DO - PAGINATION -const [results] = await connection.query('SELECT * FROM products WHERE category_id = ? LIMIT ?, ?', [category_id,offset, pageSize]);
-        const [results] = await connection.query('SELECT * FROM products WHERE category_id = ? ', [category_id]);
+        const [results] = await connection.query('SELECT * FROM products WHERE status="ativo" and category_id = ? ', [category_id]);
         connection.release();
         var now = new Date();
         //Logmessage('Lista de pessoas recuperada do banco de dados:'+ results);
