@@ -12,5 +12,5 @@ router.get('/products/category/:category_id',login.required, ProductController.s
 router.get('/products/:id', login.required, ProductController.getProduct );
 router.delete('/products/:id', login.required,ProductController.deleteProduct);
 router.put('/products/:id', login.required,ProductController.alterProduct);
-
+router.put('/products/reorder', login.required,ProductController.reorderProducts);
 module.exports = router;

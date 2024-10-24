@@ -180,4 +180,33 @@ simpleListAllProducts = async (req, res) => {
     }
 }
 
-module.exports = { createProduct, listAllProducts, alterProduct, deleteProduct, getProduct, simpleListAllProducts }
+const reorderProducts = async (req, res) => {
+    const { produtos } = req.body; // Espera-se que o corpo contenha um array de categorias
+
+ 
+    try {
+        const connection = await pool.getConnection();
+
+        // Usar uma transação para garantir que todas as atualizações sejam feitas ou nenhuma delas
+        await connection.beginTransaction();
+
+        // Atualizar a ordem das categorias
+        for (const produto of produtos) {
+            await connection.query('UPDATE products SET product_order = ? WHERE id = ?', [produto.product_order, produto.id]);
+        }
+
+        // Se tudo correr bem, confirma a transação
+        await connection.commit();
+        connection.release();
+
+        Logmessage('Ordem dos produtos atualizada com sucesso');
+        res.status(200).json({ message: 'Ordem dos produtos atualizada com sucesso.' });
+    } catch (error) {
+        // Se ocorrer um erro, reverte a transação
+        await connection.rollback();
+        Logmessage('Erro ao atualizar a ordem dos produtos:', error);
+        res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+};
+
+module.exports = { createProduct, listAllProducts, alterProduct, deleteProduct, getProduct, simpleListAllProducts,reorderProducts }
