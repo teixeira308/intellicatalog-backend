@@ -9,8 +9,7 @@ dotenv.config();
 createUser = async (req, res, next) => {
 
     try {
-        Logmessage(req.body);
-    
+       
         const { email, password,status,createdAt,updatedAt } = req.body;
         Logmessage("Criar usuario",email)
         // Verificar se o email já está cadastrado
