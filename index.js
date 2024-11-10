@@ -26,8 +26,7 @@ app.use(express.urlencoded({
     extended: true
   }))
 
-// Define os cabeçalhos CORS manualmente não é mais necessário
-    
+ 
 
      
 // Inicia o servidor
