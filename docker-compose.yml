@@ -1,0 +1,100 @@
+
+
+services:
+  api:
+    build:      
+      context: .
+      dockerfile: ./backend/Dockerfile
+    ports:
+      - "${API_PORT}:${API_PORT}"
+    environment:
+      - PORT=${API_PORT}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_NAME=${MYSQL_DATABASE}
+      - DB_USER=${MYSQL_USER}
+      - DB_PASS=${MYSQL_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - ADMIN_USER=${ADMIN_USER}
+      - NODE_ENV=${NODE_ENV}
+    volumes:
+      - uploads_data:/backend/intellicatalog-backend/uploads
+    depends_on:
+      - db
+    restart: unless-stopped
+    networks:
+      - app-network
+  intellicat:
+    build:
+      context: ./catalog
+      dockerfile: Dockerfile
+      args:
+        - REACT_APP_API_URL=${API_URL}
+        - REACT_APP_API_TOKEN=${API_TOKEN}
+    ports:
+      - "3002:3002"
+    environment:
+      - REACT_APP_API_URL=${API_URL}
+      - REACT_APP_API_TOKEN=${API_TOKEN}
+    depends_on:
+      - api
+    restart: unless-stopped
+    networks:
+      - app-network
+  backoffice:
+    build:
+      context: ./backoffice
+      dockerfile: Dockerfile
+      args:
+        - REACT_APP_STORE_SITE=${STORE_SITE}
+        - REACT_APP_API=${API}
+    ports:
+      - "3001:3001"
+    environment:
+      - REACT_APP_STORE_SITE=${STORE_SITE}
+      - REACT_APP_API=${API}
+    depends_on:
+      - api
+    restart: unless-stopped
+    networks:
+      - app-network
+db:
+    image: mysql:8.0
+    ports:
+      - "${DB_PORT}:${DB_PORT}"
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - app-network
+    restart: unless-stopped
+
+phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    ports:
+      - "8080:80"
+    environment:
+      - PMA_HOST=db
+      - PMA_PORT=${DB_PORT}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - UPLOAD_LIMIT=300M
+    depends_on:
+      - db
+    networks:
+      - app-network
+    restart: unless-stopped
+
+
+volumes:
+  mysql_data:
+    driver: local
+  uploads_data:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge
