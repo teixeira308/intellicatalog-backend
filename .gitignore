@@ -6,3 +6,5 @@ uploads/
 
 # Ignore environment variables
 .env
+Dockerfile
+docker-compose.yml
