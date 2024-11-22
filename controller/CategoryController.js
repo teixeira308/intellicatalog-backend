@@ -36,7 +36,7 @@ listAllCategories = async (req, res) => {
         const offset = (page - 1) * pageSize;
         const totalPages = Math.ceil(totalCount[0].total / pageSize);
 
-        const [results] = await connection.query('SELECT * FROM categories LIMIT ?, ?', [offset, pageSize]);
+        const [results] = await connection.query('SELECT * FROM categories order by catalog_order asc LIMIT ?, ?', [offset, pageSize]);
         connection.release();
         var now = new Date();
         Logmessage('Lista de categorias recuperada do banco de dados:'+ results);
