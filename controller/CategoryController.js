@@ -137,7 +137,7 @@ simpleListAllCategories = async (req, res) => {
         const offset = (page - 1) * pageSize;
         const totalPages = Math.ceil(totalCount[0].total / pageSize);
 
-        const [results] = await connection.query('SELECT * FROM categories where status="ativo" and user_id = ? LIMIT ?, ?', [user_id,offset, pageSize]);
+        const [results] = await connection.query('SELECT * FROM categories where status="ativo" and user_id = ? order by catalog_order asc LIMIT ?, ?', [user_id,offset, pageSize]);
         connection.release();
 
         Logmessage('Lista de categorias recuperada do banco de dados:'+ JSON.stringify(results));
