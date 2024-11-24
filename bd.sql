@@ -27,6 +27,8 @@ SET time_zone = "+03:00";
 -- Estrutura para tabela `categories`
 --
 
+
+
 CREATE TABLE `categories` (
   `id` int NOT NULL,
   `name` varchar(100) NOT NULL,
@@ -158,6 +160,21 @@ CREATE TABLE `users_catalog` (
   `created_atUTC` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_atUTC` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+CREATE TABLE user_tokens (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL, -- Chave estrangeira para a tabela de usuários
+    access_token TEXT NOT NULL, -- Token de acesso
+    refresh_token TEXT NOT NULL, -- Token de renovação
+    scope TEXT NOT NULL, -- Escopo autorizado
+    token_type VARCHAR(50), -- Tipo de token (geralmente "Bearer")
+    expiry_date DATETIME, -- Data de expiração do access_token
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Data de criação do registro
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, -- Data de atualização automática
+    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users_catalog(id) ON DELETE CASCADE -- Relaciona com a tabela de usuários
+);
+
 
 --
 -- Índices para tabelas despejadas
