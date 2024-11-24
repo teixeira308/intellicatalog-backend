@@ -45,8 +45,11 @@ createUser = async (req, res, next) => {
 ResetPassword = async (req,res) => {
     const { email } = req.body;
 
-   const [existingUser] = await pool.execute('SELECT * FROM users_catalog WHERE email = ?', [email]);
-
+   const [results] = await pool.execute('SELECT * FROM users_catalog WHERE email = ?', [email]);
+   if (results.length < 1) {
+    console.log("não encontrado")
+    return res.status(404).json({ errors: ["Usuário não encontrado!"] });
+}
 
     res.json({ email: email });
 }
