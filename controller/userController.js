@@ -10,7 +10,7 @@ createUser = async (req, res, next) => {
 
     try {
        
-        const { email, password,status,createdAt,updatedAt } = req.body;
+        const { email, password } = req.body;
         Logmessage("Criar usuario",email)
         // Verificar se o email já está cadastrado
         const [existingUser] = await pool.execute('SELECT * FROM users_catalog WHERE email = ?', [email]);
@@ -42,7 +42,17 @@ createUser = async (req, res, next) => {
     
 };
 
- 
+ResetPassword = async (req,res) => {
+    const { userId } = req.user.userId;
+
+    const [email] = await pool.execute('SELECT email FROM users_catalog WHERE id = ?', [userId]);
+    if (email.length > 0) {
+        return res.status(409).send({ message: 'Usuário já cadastrado' });
+    }
+
+    res.json({ email: email });
+}
+
 
 Login = async (req, res, next) => {
     try {
@@ -103,6 +113,12 @@ Login = async (req, res, next) => {
     }
 };
 
+function generateResetToken(userId) {
+    const secret = process.env.JWT_SECRET; // Mantenha a chave segura no .env
+    const expiresIn = '1h'; // Token expira em 1 hora
+    return jwt.sign({ userId }, secret, { expiresIn });
+}
 
 
-module.exports = {Login, createUser };
+
+module.exports = {Login, createUser, ResetPassword };
