@@ -43,12 +43,12 @@ createUser = async (req, res, next) => {
 };
 
 ResetPassword = async (req,res) => {
-    const { userId } = req.user.userId;
+    const { email } = req.body;
 
-    const [email] = await pool.execute('SELECT email FROM users_catalog WHERE id = ?', [userId]);
-    if (email.length > 0) {
-        return res.status(409).send({ message: 'Usuário já cadastrado' });
-    }
+   const [existingUser] = await pool.execute('SELECT * FROM users_catalog WHERE email = ?', [email]);
+        if (existingUser.length > 0) {
+            return res.status(409).send({ message: 'Usuário já cadastrado' });
+        }
 
     res.json({ email: email });
 }
