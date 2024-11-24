@@ -46,9 +46,7 @@ ResetPassword = async (req,res) => {
     const { email } = req.body;
 
    const [existingUser] = await pool.execute('SELECT * FROM users_catalog WHERE email = ?', [email]);
-        if (existingUser.length > 0) {
-            return res.status(409).send({ message: 'Usuário já cadastrado' });
-        }
+
 
     res.json({ email: email });
 }
