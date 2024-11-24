@@ -42,17 +42,32 @@ createUser = async (req, res, next) => {
     
 };
 
-ResetPassword = async (req,res) => {
-    const { email } = req.body;
+ResetPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
 
-   const [results] = await pool.execute('SELECT * FROM users_catalog WHERE email = ?', [email]);
-   if (results.length < 1) {
-    console.log("não encontrado")
-    return res.status(404).json({ errors: ["Usuário não encontrado!"] });
-}
+        // Verificar se o e-mail está registrado
+        const [results] = await pool.execute('SELECT * FROM users_catalog WHERE email = ?', [email]);
+        if (results.length < 1) {
+            return res.status(404).json({ errors: ["Usuário não encontrado!"] });
+        }
 
-    res.json({ email: email });
-}
+        const user = results[0];
+
+        // Gerar um token de reset
+        const resetToken = generateResetToken(user.id);
+        const resetLink = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+
+        // Enviar o e-mail com o link de redefinição
+        await sendResetEmail(email, resetLink);
+
+        return res.status(200).send({ message: 'Link de redefinição enviado para o e-mail' });
+    } catch (error) {
+        console.error('Erro ao enviar e-mail de redefinição:', error);
+        return res.status(500).send({ error: 'Erro interno do servidor' });
+    }
+};
+
 
 
 Login = async (req, res, next) => {
