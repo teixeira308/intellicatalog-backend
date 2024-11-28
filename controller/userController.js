@@ -4,7 +4,6 @@ const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 const { Logmessage } = require("../helper/Tools");
 const bodyParser = require('body-parser');
-const { getAuthUrl, getOAuth2Client, setTokens } = require('../services/GAuth');
 
 
 dotenv.config();
