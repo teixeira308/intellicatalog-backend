@@ -71,27 +71,7 @@ ResetPassword = async (req, res) => {
     }
 };
 
-// Autenticação no Google Calendar
-const CalendarAuth = async (req, res) => {
-    const code = req.query.code;
-    const userId = req.user?.userId;
-  
-    if (!userId) {
-      return res.status(400).send({ error: 'Usuário não identificado' });
-    }
-  
-    try {
-      const tokens = await setTokens(code);
-  
-      // Salvar tokens no banco
-      await saveTokensToDatabase(userId, tokens);
-  
-      return res.status(200).send({ message: 'Tokens salvos com sucesso!' });
-    } catch (error) {
-      console.error('Erro ao salvar tokens:', error);
-      return res.status(500).send({ error: 'Erro ao salvar tokens' });
-    }
-  };
+ 
 
 Login = async (req, res, next) => {
     try {
@@ -158,34 +138,7 @@ function generateResetToken(userId) {
 }
 
 
-async function saveTokensToDatabase(userId, tokens) {
-    const query = `
-      INSERT INTO user_tokens (user_id, access_token, refresh_token, scope, token_type, expiry_date)
-      VALUES (?, ?, ?, ?, ?, ?)
-      ON DUPLICATE KEY UPDATE
-      access_token = VALUES(access_token),
-      refresh_token = VALUES(refresh_token),
-      scope = VALUES(scope),
-      token_type = VALUES(token_type),
-      expiry_date = VALUES(expiry_date)
-    `;
-    const values = [
-      userId,
-      tokens.access_token,
-      tokens.refresh_token,
-      tokens.scope,
-      tokens.token_type,
-      new Date(tokens.expiry_date),
-    ];
-  
-    try {
-      await pool.execute(query, values);
-    } catch (error) {
-      console.error('Erro ao salvar tokens no banco:', error.message);
-      throw error;
-    }
-  }
   
 
 
-module.exports = { Login, createUser, ResetPassword, CalendarAuth };
+module.exports = { Login, createUser, ResetPassword };
