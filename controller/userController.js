@@ -66,8 +66,8 @@ ResetPassword = async (req, res) => {
         const query = 'UPDATE users_catalog SET reset_token = ?, reset_token_expiration = ? WHERE id = ?';
         await pool.execute(query, [resetToken, expirationTime, user.id]);
 
-        const resetLink = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
-
+        const resetLink = `${process.env.FRONTEND_URL}/redefinirsenha/${resetToken}`;
+        console.log(resetLink)
         // Enviar o e-mail com o link de redefinição
         await sendResetEmail(email, resetLink);
 
@@ -83,7 +83,6 @@ ResetPassword = async (req, res) => {
 
 async function sendResetEmail(email, resetLink) {
 
-    console.log(resetLink)
     const transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST,
         port: process.env.SMTP_PORT,
