@@ -82,6 +82,8 @@ ResetPassword = async (req, res) => {
 
 
 async function sendResetEmail(email, resetLink) {
+
+    console.log(resetLink)
     const transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST,
         port: process.env.SMTP_PORT,
