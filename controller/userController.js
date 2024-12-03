@@ -8,6 +8,8 @@ const bodyParser = require('body-parser');
 
 dotenv.config();
 
+const nodemailer = require('nodemailer');
+
 createUser = async (req, res, next) => {
 
     try {
@@ -56,8 +58,14 @@ ResetPassword = async (req, res) => {
 
         const user = results[0];
 
-        // Gerar um token de reset
+        // Gerar token de redefinição
         const resetToken = generateResetToken(user.id);
+        const expirationTime = new Date(Date.now() + 3600000); // 1 hora a partir de agora
+
+        // Salvar o token e a validade no banco de dados
+        const query = 'UPDATE users_catalog SET reset_token = ?, reset_token_expiration = ? WHERE id = ?';
+        await pool.execute(query, [resetToken, expirationTime, user.id]);
+
         const resetLink = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
 
         // Enviar o e-mail com o link de redefinição
@@ -69,6 +77,37 @@ ResetPassword = async (req, res) => {
         return res.status(500).send({ error: 'Erro interno do servidor' });
     }
 };
+
+
+
+
+async function sendResetEmail(email, resetLink) {
+    const transporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST,
+        port: process.env.SMTP_PORT,
+        secure: false, // Altere para true se usar SSL/TLS direto
+        auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS,
+        },
+    });
+
+    const mailOptions = {
+        from: '"Sua Empresa" <noreply@suaempresa.com>',
+        to: email,
+        subject: 'Redefinição de Senha',
+        html: `<p>Clique no link abaixo para redefinir sua senha:</p>
+               <a href="${resetLink}">Redefinir Senha</a>`,
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log('E-mail enviado para:', email);
+    } catch (error) {
+        console.error('Erro ao enviar e-mail:', error);
+        throw new Error('Falha ao enviar e-mail');
+    }
+}
 
  
 
@@ -136,8 +175,34 @@ function generateResetToken(userId) {
     return jwt.sign({ userId }, secret, { expiresIn });
 }
 
+UpdatePassword = async (req, res) => {
+    try {
+        const { token, newPassword } = req.body;
+
+        // Verificar se o token é válido
+        const query = 'SELECT * FROM users_catalog WHERE reset_token = ? AND reset_token_expiration > NOW()';
+        const [results] = await pool.execute(query, [token]);
+
+        if (results.length < 1) {
+            return res.status(400).json({ errors: ["Token inválido ou expirado!"] });
+        }
+
+        const user = results[0];
+
+        // Atualizar a senha
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        const updateQuery = 'UPDATE users_catalog SET password = ?, reset_token = NULL, reset_token_expiration = NULL WHERE id = ?';
+        await pool.execute(updateQuery, [hashedPassword, user.id]);
+
+        return res.status(200).send({ message: 'Senha atualizada com sucesso!' });
+    } catch (error) {
+        console.error('Erro ao atualizar senha:', error);
+        return res.status(500).send({ error: 'Erro interno do servidor' });
+    }
+};
+
 
   
 
 
-module.exports = { Login, createUser, ResetPassword };
+module.exports = { Login, createUser, ResetPassword, UpdatePassword };
