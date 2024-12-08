@@ -86,7 +86,7 @@ async function sendResetEmail(email, resetLink) {
     const transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST,
         port: process.env.SMTP_PORT,
-        secure: false, // Altere para true se usar SSL/TLS direto
+        secure: true, // Altere para true se usar SSL/TLS direto
         auth: {
             user: process.env.SMTP_USER,
             pass: process.env.SMTP_PASS,
