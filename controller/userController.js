@@ -66,7 +66,7 @@ ResetPassword = async (req, res) => {
         const query = 'UPDATE users_catalog SET reset_token = ?, reset_token_expiration = ? WHERE id = ?';
         await pool.execute(query, [resetToken, expirationTime, user.id]);
 
-        const resetLink = `${process.env.FRONTEND_URL}redefinirsenha/${resetToken}`;
+        const resetLink = `${process.env.FRONTEND_URL}/redefinirsenha/${resetToken}`;
         console.log(resetLink)
         // Enviar o e-mail com o link de redefinição
         await sendResetEmail(email, resetLink);
