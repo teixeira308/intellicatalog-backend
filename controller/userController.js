@@ -94,7 +94,7 @@ async function sendResetEmail(email, resetLink) {
     });
 
     const mailOptions = {
-        from: '"Sua Empresa" <noreply@suaempresa.com>',
+        from: '"Vitrine Smart" <contato@vitrinesmart.com>',
         to: email,
         subject: 'Redefinição de Senha',
         html: `<p>Clique no link abaixo para redefinir sua senha:</p>
