@@ -119,7 +119,7 @@ async function sendResetEmail(email, resetLink) {
                             overflow: hidden;
                         }
                         .header {
-                            background-color: #4CAF50;
+                            background-color: #676767;
                             padding: 20px;
                             text-align: center;
                         }
@@ -132,7 +132,7 @@ async function sendResetEmail(email, resetLink) {
                             font-family: 'Kanit', sans-serif;
                         }
                         .content h2 {
-                            color: #4CAF50;
+                            color: #676767;
                             text-align: center;
                         }
                         .content p {
@@ -143,7 +143,7 @@ async function sendResetEmail(email, resetLink) {
                             width: 200px;
                             margin: 20px auto;
                             padding: 10px 20px;
-                            background-color: #4CAF50;
+                            background-color: #676767;
                             color: #ffffff;
                             text-decoration: none;
                             border-radius: 4px;
