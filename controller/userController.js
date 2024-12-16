@@ -97,8 +97,104 @@ async function sendResetEmail(email, resetLink) {
         from: '"Vitrine Smart" <contato@vitrinesmart.com>',
         to: email,
         subject: 'Redefinição de Senha',
-        html: `<p>Clique no link abaixo para redefinir sua senha:</p>
-               <a href="${resetLink}">Redefinir Senha</a>`,
+        html: `
+            <html>
+                <head>
+                    <style>
+                        body {
+                            font-family: 'Inter', Arial, sans-serif;
+                            background-color: #f4f4f9;
+                            margin: 0;
+                            padding: 0;
+                        }
+                        table {
+                            width: 100%;
+                            padding: 20px;
+                        }
+                        .email-container {
+                            width: 600px;
+                            background-color: #ffffff;
+                            border-radius: 8px;
+                            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                            overflow: hidden;
+                        }
+                        .header {
+                            background-color: #4CAF50;
+                            padding: 20px;
+                            text-align: center;
+                        }
+                        .header img {
+                            width: 150px;
+                        }
+                        .content {
+                            padding: 30px;
+                            color: #333;
+                            font-family: 'Kanit', sans-serif;
+                        }
+                        .content h2 {
+                            color: #4CAF50;
+                            text-align: center;
+                        }
+                        .content p {
+                            font-size: 16px;
+                        }
+                        .btn {
+                            display: block;
+                            width: 200px;
+                            margin: 20px auto;
+                            padding: 10px 20px;
+                            background-color: #4CAF50;
+                            color: #ffffff;
+                            text-decoration: none;
+                            border-radius: 4px;
+                            text-align: center;
+                            font-weight: bold;
+                        }
+                        .footer {
+                            background-color: #f1f1f1;
+                            text-align: center;
+                            padding: 15px;
+                        }
+                        .footer p {
+                            font-size: 12px;
+                            color: #888;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <table role="presentation">
+                        <tr>
+                            <td align="center">
+                                <table role="presentation" class="email-container">
+                                    <tr class="header">
+                                        <td>
+                                            <!-- Sem logo, apenas o nome ou o título da empresa -->
+                                            <h1 style="color: white;">Vitrine Smart</h1>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="content">
+                                            <h2>Redefinição de Senha</h2>
+                                            <p>Olá,</p>
+                                            <p>Recebemos uma solicitação para redefinir sua senha. Para continuar, clique no link abaixo:</p>
+                                            <p><a href="${resetLink}" class="btn">Redefinir Senha</a></p>
+                                            <p>Se você não solicitou a redefinição, pode ignorar este e-mail.</p>
+                                            <p>Atenciosamente,</p>
+                                            <p><strong>Equipe Vitrine Smart</strong></p>
+                                        </td>
+                                    </tr>
+                                    <tr class="footer">
+                                        <td>
+                                            <p>Este e-mail foi enviado para ${email}.</p>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                </body>
+            </html>
+        `,
     };
 
     try {
