@@ -1,5 +1,5 @@
-const pool = require('../config/dbConfig');
-const { Logmessage } = require("../helper/Tools");
+const pool = require('../config/dbConfig.js');
+const { Logmessage } = require('../helper/Tools.js');
 
 // Criar um serviço
 const createService = async (req, res) => {

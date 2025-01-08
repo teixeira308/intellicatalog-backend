@@ -1,5 +1,5 @@
-const pool = '../config/dbConfig.js';
-const { Logmessage } = "../helper/Tools.js";
+const pool = require('../config/dbConfig.js');
+const { Logmessage } = require('../helper/Tools.js');
 
 // Criar agendamento
 const createAppointments = async (req, res) => {
