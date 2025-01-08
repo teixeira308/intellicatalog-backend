@@ -9,6 +9,19 @@ const createAppointments = async (req, res) => {
     try {
         const connection = await pool.getConnection();
 
+        // Verificar o status da disponibilidade
+        const [availability] = await connection.query('SELECT status FROM availability WHERE id = ?', [availability_id]);
+
+        if (availability.length === 0) {
+            connection.release();
+            return res.status(404).json({ message: 'Disponibilidade não encontrada' });
+        }
+
+        if (availability[0].status === 'unavailable') {
+            connection.release();
+            return res.status(409).json({ message: 'Disponibilidade já está indisponível' });
+        }
+
         // Iniciar transação
         await connection.beginTransaction();
 
@@ -19,7 +32,7 @@ const createAppointments = async (req, res) => {
         );
 
         // Atualizar o status da disponibilidade
-        const [availabilityResult] = await connection.query(
+        await connection.query(
             'UPDATE availability SET status = ? WHERE id = ?', 
             ['unavailable', availability_id]
         );
@@ -37,7 +50,6 @@ const createAppointments = async (req, res) => {
                 appointment_time,
                 status: status || 'pending',
             },
-            availabilityUpdate: availabilityResult,
         });
 
         res.status(201).json({
