@@ -141,8 +141,12 @@ const UpdateAppointments = async (req, res) => {
 const DeleteAppointments = async (req, res) => {
     const { id } = req.params;
 
+    let connection; // Define a variável no escopo superior
+
     try {
-        const connection = await pool.getConnection();
+        connection = await pool.getConnection();
+
+        // Verificar se o agendamento existe
         const [existingAppointment] = await connection.query('SELECT * FROM appointments WHERE id = ?', [id]);
 
         if (existingAppointment.length === 0) {
@@ -150,16 +154,39 @@ const DeleteAppointments = async (req, res) => {
             return res.status(404).json({ message: 'Agendamento não encontrado' });
         }
 
+        // Obter o `availability_id` do agendamento
+        const availabilityId = existingAppointment[0].availability_id;
+
+        // Iniciar transação
+        await connection.beginTransaction();
+
+        // Excluir o agendamento
         await connection.query('DELETE FROM appointments WHERE id = ?', [id]);
+
+        // Atualizar o status da disponibilidade para 'available'
+        await connection.query('UPDATE availability SET status = ? WHERE id = ?', ['available', availabilityId]);
+
+        // Confirmar transação
+        await connection.commit();
         connection.release();
 
-        Logmessage('Agendamento excluído do banco de dados:', id);
+        Logmessage('Agendamento excluído e disponibilidade atualizada no banco de dados:', {
+            appointmentId: id,
+            availabilityId,
+        });
+
         res.status(200).json({ message: 'Agendamento excluído com sucesso', id });
     } catch (error) {
-        Logmessage('Erro ao excluir agendamento do banco de dados: ' + error);
+        // Reverter transação e liberar conexão em caso de erro
+        if (connection) {
+            await connection.rollback();
+            connection.release();
+        }
+        Logmessage('Erro ao excluir agendamento ou atualizar disponibilidade no banco de dados: ' + error);
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
 };
+
 
 // Obter um agendamento específico
 const GetAppointments = async (req, res) => {
