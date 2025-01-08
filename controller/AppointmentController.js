@@ -3,7 +3,7 @@ const { Logmessage } = require('../helper/Tools.js');
 
 // Criar agendamento
 const createAppointments = async (req, res) => {
-    const { service_id, availability_id, appointment_date, appointment_time, status } = req.body;
+    const { service_id, availability_id, obs, status } = req.body;
     Logmessage("Criando agendamento, dados do body:", req.body);
 
     let connection;
