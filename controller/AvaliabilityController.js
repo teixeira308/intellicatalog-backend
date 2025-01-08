@@ -1,78 +1,112 @@
-// controllers/AvaliabilityController.js
-
-import Availability from '../models/Availability.js';
+import pool from '../config/dbConfig.js';
 import { Logmessage } from '../helper/Tools.js';
 
+// Criar disponibilidade
 export const createAvaliability = async (req, res) => {
-    try {
-        const data = req.body;
-        Logmessage('Criando disponibilidade:', data);
+    const data = req.body;
+    Logmessage("Criando disponibilidade, dados do body:", data);
 
-        const newAvailability = await Availability.create(data);
-        res.status(201).json(newAvailability);
+    try {
+        const connection = await pool.getConnection();
+        const [result] = await connection.query('INSERT INTO availability SET ?', data);
+        connection.release();
+
+        Logmessage('Dados da disponibilidade inseridos no banco de dados:', data);
+        res.status(201).json({ id: result.insertId, ...data });
     } catch (error) {
-        Logmessage('Erro ao criar disponibilidade:', error);
+        Logmessage('Erro ao criar disponibilidade no banco de dados:', error);
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
 };
 
+// Listar todas as disponibilidades
 export const GetAllAvaliability = async (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 10;
+
     try {
-        const availabilities = await Availability.findAll();
-        res.status(200).json(availabilities);
+        const connection = await pool.getConnection();
+        const [totalCount] = await connection.query('SELECT COUNT(*) as total FROM availability');
+        const offset = (page - 1) * pageSize;
+        const totalPages = Math.ceil(totalCount[0].total / pageSize);
+
+        const [results] = await connection.query('SELECT * FROM availability LIMIT ?, ?', [offset, pageSize]);
+        connection.release();
+
+        res.header('X-Total-Count', totalCount[0].total);
+        res.status(200).json({ data: results, page, pageSize, totalPages });
     } catch (error) {
-        Logmessage('Erro ao buscar disponibilidades:', error);
+        Logmessage('Erro ao recuperar a lista de disponibilidades do banco de dados:', error);
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
 };
 
+// Obter disponibilidade por ID
 export const GetAvaliability = async (req, res) => {
-    try {
-        const { id } = req.params;
+    const { id } = req.params;
 
-        const availability = await Availability.findByPk(id);
-        if (!availability) {
+    try {
+        const connection = await pool.getConnection();
+        const [availability] = await connection.query('SELECT * FROM availability WHERE id = ?', [id]);
+        connection.release();
+
+        if (availability.length === 0) {
             return res.status(404).json({ message: 'Disponibilidade não encontrada' });
         }
 
-        res.status(200).json(availability);
+        Logmessage('Disponibilidade recuperada do banco de dados:', availability);
+        res.status(200).json(availability[0]);
     } catch (error) {
-        Logmessage('Erro ao buscar disponibilidade:', error);
+        Logmessage('Erro ao recuperar disponibilidade do banco de dados:', error);
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
 };
 
+// Atualizar disponibilidade
 export const UpdateAvaliability = async (req, res) => {
-    try {
-        const { id } = req.body; // ID da disponibilidade
-        const updates = req.body; // Dados atualizados
+    const { id } = req.params; // ID da disponibilidade
+    const updatedData = req.body;
 
-        const availability = await Availability.findByPk(id);
-        if (!availability) {
+    try {
+        const connection = await pool.getConnection();
+        const [existingAvailability] = await connection.query('SELECT * FROM availability WHERE id = ?', [id]);
+
+        if (existingAvailability.length === 0) {
+            connection.release();
             return res.status(404).json({ message: 'Disponibilidade não encontrada' });
         }
 
-        await availability.update(updates);
-        res.status(200).json({ message: 'Disponibilidade atualizada com sucesso', availability });
+        await connection.query('UPDATE availability SET ? WHERE id = ?', [updatedData, id]);
+        connection.release();
+
+        Logmessage('Dados da disponibilidade atualizados no banco de dados:', updatedData);
+        res.status(200).json({ message: 'Disponibilidade atualizada com sucesso' });
     } catch (error) {
-        Logmessage('Erro ao atualizar disponibilidade:', error);
+        Logmessage('Erro ao atualizar disponibilidade no banco de dados:', error);
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
 };
 
+// Deletar disponibilidade
 export const DeleteAvaliability = async (req, res) => {
-    try {
-        const { id } = req.body;
+    const { id } = req.params;
 
-        const availability = await Availability.findByPk(id);
-        if (!availability) {
+    try {
+        const connection = await pool.getConnection();
+        const [existingAvailability] = await connection.query('SELECT * FROM availability WHERE id = ?', [id]);
+
+        if (existingAvailability.length === 0) {
+            connection.release();
             return res.status(404).json({ message: 'Disponibilidade não encontrada' });
         }
 
-        await availability.destroy();
-        res.status(200).json({ message: 'Disponibilidade excluída com sucesso' });
+        await connection.query('DELETE FROM availability WHERE id = ?', [id]);
+        connection.release();
+
+        Logmessage('Disponibilidade excluída do banco de dados:', id);
+        res.status(200).json({ message: 'Disponibilidade excluída com sucesso', id });
     } catch (error) {
-        Logmessage('Erro ao excluir disponibilidade:', error);
+        Logmessage('Erro ao excluir disponibilidade do banco de dados:', error);
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
 };
