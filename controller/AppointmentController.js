@@ -6,8 +6,9 @@ const createAppointments = async (req, res) => {
     const { service_id, availability_id, appointment_date, appointment_time, status } = req.body;
     Logmessage("Criando agendamento, dados do body:", req.body);
 
+    let connection;
     try {
-        const connection = await pool.getConnection();
+        connection = await pool.getConnection();
 
         // Verificar o status da disponibilidade
         const [availability] = await connection.query('SELECT status FROM availability WHERE id = ?', [availability_id]);
