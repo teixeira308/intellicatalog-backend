@@ -9,7 +9,7 @@ const ServiceController = require('../controller/ServiceController');
 router.post('/services', login.required, ServiceController.createService); 
 router.get('/services', login.required, ServiceController.GetAllServices);
 router.put('/services', login.required, ServiceController.UpdateService);
-router.delete('/services', login.required, ServiceController.DeleteService);
+router.delete('/services/:id', login.required, ServiceController.DeleteService);
 router.get('/services/:id', login.required, ServiceController.GetService);
 
 module.exports = router;
