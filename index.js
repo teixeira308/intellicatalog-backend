@@ -7,7 +7,9 @@ const productRoute = require('./routes/ProductRouter');
 const uploadImageRouter = require('./routes/uploadImageRouter');
 const storeRouter = require('./routes/storeRouter');
 const uploadStoreImageRouter = require('./routes/UploadStoreImageRouter');
-
+const ServicesRouter = require('./routes/ServicesRouter');
+const AvailabilityRouter = require('./routes/AvailabilityRouter');
+const AppointmentsRouter = require('./routes/AppointmentsRouter');
 
 // Middleware para analisar o corpo das solicitações e habilitar CORS
 app.use(express.json());
@@ -21,6 +23,11 @@ app.use('/intellicatalog/v1/', productRoute);
 app.use('/intellicatalog/v1/', uploadImageRouter);
 app.use('/intellicatalog/v1/', storeRouter);
 app.use('/intellicatalog/v1/', uploadStoreImageRouter);
+app.use('/intellicatalog/v1/', ServicesRouter);
+app.use('/intellicatalog/v1/', AvailabilityRouter);
+app.use('/intellicatalog/v1/', AppointmentsRouter);
+
+
 
 app.use(express.urlencoded({
     extended: true
