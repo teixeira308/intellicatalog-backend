@@ -62,13 +62,15 @@ GetAvaliability = async (req, res) => {
     }
 }
 
-// Atualizar disponibilidade
-UpdateAvaliability = async (req, res) => {
+// Atualizar disponibilidade (apenas os campos informados)
+const UpdateAvaliability = async (req, res) => {
     const { id } = req.params; // ID da disponibilidade
-    const updatedData = req.body;
+    const updates = req.body; // Dados a serem atualizados
 
     try {
         const connection = await pool.getConnection();
+
+        // Verificar se a disponibilidade existe
         const [existingAvailability] = await connection.query('SELECT * FROM availability WHERE id = ?', [id]);
 
         if (existingAvailability.length === 0) {
@@ -76,16 +78,38 @@ UpdateAvaliability = async (req, res) => {
             return res.status(404).json({ message: 'Disponibilidade não encontrada' });
         }
 
-        await connection.query('UPDATE availability SET ? WHERE id = ?', [updatedData, id]);
+        // Construir query dinamicamente
+        const updateFields = [];
+        const updateValues = [];
+
+        for (const [field, value] of Object.entries(updates)) {
+            updateFields.push(`${field} = ?`);
+            updateValues.push(value);
+        }
+
+        // Se nenhum campo foi informado, retornar erro
+        if (updateFields.length === 0) {
+            connection.release();
+            return res.status(400).json({ message: 'Nenhum campo para atualizar informado' });
+        }
+
+        // Adicionar o ID ao final dos valores
+        updateValues.push(id);
+
+        // Executar a query de atualização
+        const updateQuery = `UPDATE availability SET ${updateFields.join(', ')} WHERE id = ?`;
+        await connection.query(updateQuery, updateValues);
+
         connection.release();
 
-        Logmessage('Dados da disponibilidade atualizados no banco de dados:', updatedData);
+        Logmessage('Dados da disponibilidade atualizados no banco de dados:', { id, ...updates });
         res.status(200).json({ message: 'Disponibilidade atualizada com sucesso' });
     } catch (error) {
-        Logmessage('Erro ao atualizar disponibilidade no banco de dados:', error);
+        Logmessage('Erro ao atualizar disponibilidade no banco de dados: ' + error);
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
-}
+};
+
 
 // Deletar disponibilidade
 DeleteAvaliability = async (req, res) => {

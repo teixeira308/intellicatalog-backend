@@ -41,13 +41,15 @@ const GetAllServices = async (req, res) => {
     }
 };
 
-// Atualizar um serviço
+// Atualizar um serviço (apenas os campos informados)
 const UpdateService = async (req, res) => {
     const { id } = req.params; // ID do serviço
-    const updatedData = req.body;
+    const updates = req.body; // Dados a serem atualizados
 
     try {
         const connection = await pool.getConnection();
+
+        // Verificar se o serviço existe
         const [existingService] = await connection.query('SELECT * FROM services WHERE id = ?', [id]);
 
         if (existingService.length === 0) {
@@ -55,16 +57,38 @@ const UpdateService = async (req, res) => {
             return res.status(404).json({ message: 'Serviço não encontrado' });
         }
 
-        await connection.query('UPDATE services SET ? WHERE id = ?', [updatedData, id]);
+        // Construir query dinamicamente
+        const updateFields = [];
+        const updateValues = [];
+
+        for (const [field, value] of Object.entries(updates)) {
+            updateFields.push(`${field} = ?`);
+            updateValues.push(value);
+        }
+
+        // Se nenhum campo foi informado, retornar erro
+        if (updateFields.length === 0) {
+            connection.release();
+            return res.status(400).json({ message: 'Nenhum campo para atualizar informado' });
+        }
+
+        // Adicionar o ID ao final dos valores
+        updateValues.push(id);
+
+        // Executar a query de atualização
+        const updateQuery = `UPDATE services SET ${updateFields.join(', ')} WHERE id = ?`;
+        await connection.query(updateQuery, updateValues);
+
         connection.release();
 
-        Logmessage('Dados do serviço atualizados no banco de dados:', updatedData);
+        Logmessage('Dados do serviço atualizados no banco de dados:', { id, ...updates });
         res.status(200).json({ message: 'Serviço atualizado com sucesso' });
     } catch (error) {
-        Logmessage('Erro ao atualizar serviço no banco de dados:', error);
+        Logmessage('Erro ao atualizar serviço no banco de dados: ' + error);
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
 };
+
 
 // Deletar um serviço
 const DeleteService = async (req, res) => {

@@ -37,13 +37,15 @@ const GetAllAppointments = async (req, res) => {
     }
 };
 
-// Atualizar um agendamento
+// Atualizar um agendamento (apenas os campos informados)
 const UpdateAppointments = async (req, res) => {
-    const { id } = req.params;
-    const { service_id, availability_id, appointment_date, appointment_time, status } = req.body;
+    const { id } = req.params; // ID do agendamento
+    const updates = req.body; // Dados a serem atualizados
 
     try {
         const connection = await pool.getConnection();
+
+        // Verificar se o agendamento existe
         const [existingAppointment] = await connection.query('SELECT * FROM appointments WHERE id = ?', [id]);
 
         if (existingAppointment.length === 0) {
@@ -51,19 +53,38 @@ const UpdateAppointments = async (req, res) => {
             return res.status(404).json({ message: 'Agendamento não encontrado' });
         }
 
-        await connection.query(
-            'UPDATE appointments SET service_id = ?, availability_id = ?, appointment_date = ?, appointment_time = ?, status = ? WHERE id = ?',
-            [service_id, availability_id, appointment_date, appointment_time, status, id]
-        );
+        // Construir query dinamicamente
+        const updateFields = [];
+        const updateValues = [];
+
+        for (const [field, value] of Object.entries(updates)) {
+            updateFields.push(`${field} = ?`);
+            updateValues.push(value);
+        }
+
+        // Se nenhum campo foi informado, retornar erro
+        if (updateFields.length === 0) {
+            connection.release();
+            return res.status(400).json({ message: 'Nenhum campo para atualizar informado' });
+        }
+
+        // Adicionar o ID ao final dos valores
+        updateValues.push(id);
+
+        // Executar a query de atualização
+        const updateQuery = `UPDATE appointments SET ${updateFields.join(', ')} WHERE id = ?`;
+        await connection.query(updateQuery, updateValues);
+
         connection.release();
 
-        Logmessage('Agendamento atualizado no banco de dados:', { service_id, availability_id, appointment_date, appointment_time, status });
+        Logmessage('Agendamento atualizado no banco de dados:', { id, ...updates });
         res.status(200).json({ message: 'Agendamento atualizado com sucesso' });
     } catch (error) {
         Logmessage('Erro ao atualizar agendamento no banco de dados: ' + error);
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
 };
+
 
 // Excluir um agendamento
 const DeleteAppointments = async (req, res) => {
