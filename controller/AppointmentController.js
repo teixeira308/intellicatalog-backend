@@ -8,19 +8,57 @@ const createAppointments = async (req, res) => {
 
     try {
         const connection = await pool.getConnection();
-        const [result] = await connection.query(
+
+        // Iniciar transação
+        await connection.beginTransaction();
+
+        // Inserir agendamento
+        const [appointmentResult] = await connection.query(
             'INSERT INTO appointments (service_id, availability_id, appointment_date, appointment_time, status) VALUES (?, ?, ?, ?, ?)', 
             [service_id, availability_id, appointment_date, appointment_time, status || 'pending']
         );
+
+        // Atualizar o status da disponibilidade
+        const [availabilityResult] = await connection.query(
+            'UPDATE availability SET status = ? WHERE id = ?', 
+            ['unavailable', availability_id]
+        );
+
+        // Confirmar transação
+        await connection.commit();
         connection.release();
 
-        Logmessage('Agendamento criado no banco de dados:', { service_id, availability_id, appointment_date, appointment_time, status });
-        res.status(201).json({ id: result.insertId, service_id, availability_id, appointment_date, appointment_time, status: status || 'pending' });
+        Logmessage('Agendamento criado e disponibilidade atualizada no banco de dados:', {
+            appointment: {
+                id: appointmentResult.insertId,
+                service_id,
+                availability_id,
+                appointment_date,
+                appointment_time,
+                status: status || 'pending',
+            },
+            availabilityUpdate: availabilityResult,
+        });
+
+        res.status(201).json({
+            id: appointmentResult.insertId,
+            service_id,
+            availability_id,
+            appointment_date,
+            appointment_time,
+            status: status || 'pending',
+        });
     } catch (error) {
-        Logmessage('Erro ao criar agendamento no banco de dados: ' + error);
+        // Reverter transação em caso de erro
+        if (connection) {
+            await connection.rollback();
+            connection.release();
+        }
+        Logmessage('Erro ao criar agendamento ou atualizar disponibilidade no banco de dados: ' + error);
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
 };
+
 
 // Listar todos os agendamentos
 const GetAllAppointments = async (req, res) => {
