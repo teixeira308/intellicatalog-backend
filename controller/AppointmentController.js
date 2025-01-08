@@ -47,8 +47,7 @@ const createAppointments = async (req, res) => {
                 id: appointmentResult.insertId,
                 service_id,
                 availability_id,
-                appointment_date,
-                appointment_time,
+                obs,
                 status: status || 'pending',
             },
         });
@@ -57,8 +56,7 @@ const createAppointments = async (req, res) => {
             id: appointmentResult.insertId,
             service_id,
             availability_id,
-            appointment_date,
-            appointment_time,
+            obs,
             status: status || 'pending',
         });
     } catch (error) {
