@@ -3,7 +3,7 @@
 const express = require('express');
 const router = express.Router();
 const login = require('../midlleware/login');
-const AppointmentsController = require('../controller/AppointmentsController');
+const AppointmentsController = require('../controller/AppointmentController');
 
 // Rota para receber dados de um candidato
 router.post('/appointments', login.required, AppointmentsController.createAppointments); 

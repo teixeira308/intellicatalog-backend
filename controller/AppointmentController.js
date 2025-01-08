@@ -1,5 +1,5 @@
-import pool from '../config/dbConfig.js';
-import { Logmessage } from "../helper/Tools.js";
+const pool = '../config/dbConfig.js';
+const { Logmessage } = "../helper/Tools.js";
 
 // Criar agendamento
 const createAppointments = async (req, res) => {
@@ -110,7 +110,7 @@ const GetAppointments = async (req, res) => {
     }
 };
 
-export default {
+module.exports = {
     createAppointments,
     GetAllAppointments,
     UpdateAppointments,

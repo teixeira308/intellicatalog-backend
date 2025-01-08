@@ -1,8 +1,8 @@
-import pool from '../config/dbConfig.js';
-import { Logmessage } from '../helper/Tools.js';
+const pool = '../config/dbConfig.js';
+const { Logmessage } = '../helper/Tools.js';
 
 // Criar disponibilidade
-export const createAvaliability = async (req, res) => {
+createAvaliability = async (req, res) => {
     const data = req.body;
     Logmessage("Criando disponibilidade, dados do body:", data);
 
@@ -17,10 +17,10 @@ export const createAvaliability = async (req, res) => {
         Logmessage('Erro ao criar disponibilidade no banco de dados:', error);
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
-};
+}
 
 // Listar todas as disponibilidades
-export const GetAllAvaliability = async (req, res) => {
+GetAllAvaliability = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const pageSize = parseInt(req.query.pageSize) || 10;
 
@@ -39,10 +39,10 @@ export const GetAllAvaliability = async (req, res) => {
         Logmessage('Erro ao recuperar a lista de disponibilidades do banco de dados:', error);
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
-};
+}
 
 // Obter disponibilidade por ID
-export const GetAvaliability = async (req, res) => {
+GetAvaliability = async (req, res) => {
     const { id } = req.params;
 
     try {
@@ -60,10 +60,10 @@ export const GetAvaliability = async (req, res) => {
         Logmessage('Erro ao recuperar disponibilidade do banco de dados:', error);
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
-};
+}
 
 // Atualizar disponibilidade
-export const UpdateAvaliability = async (req, res) => {
+UpdateAvaliability = async (req, res) => {
     const { id } = req.params; // ID da disponibilidade
     const updatedData = req.body;
 
@@ -85,10 +85,10 @@ export const UpdateAvaliability = async (req, res) => {
         Logmessage('Erro ao atualizar disponibilidade no banco de dados:', error);
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
-};
+}
 
 // Deletar disponibilidade
-export const DeleteAvaliability = async (req, res) => {
+DeleteAvaliability = async (req, res) => {
     const { id } = req.params;
 
     try {
@@ -109,4 +109,12 @@ export const DeleteAvaliability = async (req, res) => {
         Logmessage('Erro ao excluir disponibilidade do banco de dados:', error);
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
+}
+
+module.exports = {
+    DeleteAvaliability,
+    UpdateAvaliability,
+    GetAvaliability,
+    GetAllAvaliability,
+    createAvaliability
 };
