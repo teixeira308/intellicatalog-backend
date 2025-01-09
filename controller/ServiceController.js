@@ -140,10 +140,39 @@ const GetService = async (req, res) => {
     }
 };
 
+// Obter serviços por UserId via query string
+const GetServiceByUserId = async (req, res) => {
+    const { user: userId } = req.query; // Parâmetro de consulta (query string)
+
+    if (!userId) {
+        return res.status(400).json({ message: 'O parâmetro "user" é obrigatório' });
+    }
+
+    try {
+        const connection = await pool.getConnection();
+
+        // Query para buscar serviços por user_id
+        const [services] = await connection.query('SELECT * FROM services WHERE user_id = ?', [userId]);
+        connection.release();
+
+        if (services.length === 0) {
+            return res.status(404).json({ message: 'Serviços não encontrados para este usuário' });
+        }
+
+        Logmessage('Serviços recuperados do banco de dados:', services);
+        res.status(200).json(services);
+    } catch (error) {
+        Logmessage('Erro ao recuperar serviços do banco de dados:', error);
+        res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+};
+
+
 module.exports = {
     createService,
     GetAllServices,
     UpdateService,
     DeleteService,
-    GetService
+    GetService,
+    GetServiceByUserId
 };
