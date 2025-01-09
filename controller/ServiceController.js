@@ -170,7 +170,6 @@ const GetServiceByUserId = async (req, res) => {
 
 module.exports = {
     createService,
-    GetAllServices,
     UpdateService,
     DeleteService,
     GetService,
