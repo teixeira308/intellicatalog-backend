@@ -1,23 +1,28 @@
 const pool = require('../config/dbConfig.js');
 const { Logmessage } = require('../helper/Tools.js');
 
-// Criar um serviço
 const createService = async (req, res) => {
     const serviceData = req.body;
+    const userId = req.user.userId; // Obtendo o userId do request
     Logmessage("Criar serviço, dados do body:", serviceData);
 
     try {
         const connection = await pool.getConnection();
-        const [result] = await connection.query('INSERT INTO services SET ?', serviceData);
+        
+        // Incluindo o userId no objeto de dados a ser inserido
+        const serviceWithUserId = { ...serviceData, user_id: userId };
+
+        const [result] = await connection.query('INSERT INTO services SET ?', serviceWithUserId);
         connection.release();
 
-        Logmessage('Dados do serviço inseridos no banco de dados:', serviceData);
-        res.status(201).json({ id: result.insertId, ...serviceData });
+        Logmessage('Dados do serviço inseridos no banco de dados:', serviceWithUserId);
+        res.status(201).json({ id: result.insertId, ...serviceWithUserId });
     } catch (error) {
         Logmessage('Erro ao inserir serviço no banco de dados:', error);
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
 };
+
 
 // Listar todos os serviços
 const GetAllServices = async (req, res) => {
