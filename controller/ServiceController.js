@@ -169,7 +169,7 @@ const GetServiceByUserId = async (req, res) => {
 
 const reorderServices = async (req, res) => {
     const { services } = req.body; // Espera-se que o corpo contenha um array de categorias
-
+    console.log(services);
  
     try {
         const connection = await pool.getConnection();
