@@ -11,7 +11,7 @@ router.put('/services/:id', login.required, ServiceController.UpdateService);
 router.delete('/services/:id', login.required, ServiceController.DeleteService);
 router.get('/services/:id', login.required, ServiceController.GetService);
 router.get('/services', login.required, ServiceController.GetServiceByUserId);
-
+router.put('/services/reorder', login.required,ServiceController.reorderServices);
 
 
 module.exports = router;
