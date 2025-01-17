@@ -6,8 +6,9 @@ const login = require('../midlleware/login');
 const ServiceController = require('../controller/ServiceController');
 
 // Rota para receber dados de um candidato
-router.put('/services/reorder', login.required,ServiceController.reorderServices);
+
 router.post('/services', login.required, ServiceController.createService);  
+router.put('/services/reorder', login.required,ServiceController.reorderServices);
 router.put('/services/:id', login.required, ServiceController.UpdateService);
 router.delete('/services/:id', login.required, ServiceController.DeleteService);
 router.get('/services/:id', login.required, ServiceController.GetService);
