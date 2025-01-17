@@ -50,7 +50,7 @@ const GetAllServices = async (req, res) => {
 const UpdateService = async (req, res) => {
     const { id } = req.params; // ID do serviço
     const updates = req.body; // Dados a serem atualizados
-
+    Logmessage(updates);
     try {
         const connection = await pool.getConnection();
 
