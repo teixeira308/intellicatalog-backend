@@ -180,7 +180,7 @@ const reorderServices = async (req, res) => {
 
         // Atualizar a ordem das categorias
         for (const service of services) {
-            await connection.query('UPDATE services SET service_order = ? WHERE id = ?', [service.service_order, service.id]);
+            await connection.query('UPDATE services SET servico_order = ? WHERE id = ?', [service.servico_order, service.id]);
         }
 
         // Se tudo correr bem, confirma a transação
