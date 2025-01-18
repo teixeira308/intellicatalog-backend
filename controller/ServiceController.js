@@ -59,7 +59,7 @@ const UpdateService = async (req, res) => {
 
         if (existingService.length === 0) {
             connection.release();
-            return res.status(404).json({ message: 'Serviço não encontrado' });
+            return res.status(404).json({ message: 'UpdateService: Serviço não encontrado' });
         }
 
         // Construir query dinamicamente
@@ -105,7 +105,7 @@ const DeleteService = async (req, res) => {
 
         if (existingService.length === 0) {
             connection.release();
-            return res.status(404).json({ message: 'Serviço não encontrado' });
+            return res.status(404).json({ message: 'DeleteService:Serviço não encontrado' });
         }
 
         await connection.query('DELETE FROM services WHERE id = ?', [id]);
@@ -129,7 +129,7 @@ const GetService = async (req, res) => {
         connection.release();
 
         if (service.length === 0) {
-            return res.status(404).json({ message: 'Serviço não encontrado' });
+            return res.status(404).json({ message: 'GetService: Serviço não encontrado' });
         }
 
         Logmessage('Serviço recuperado do banco de dados:', service);
