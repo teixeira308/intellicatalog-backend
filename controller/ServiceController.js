@@ -168,6 +168,7 @@ const GetServiceByUserId = async (req, res) => {
 };
 
 const reorderServices = async (req, res) => {
+    Logmessage('entrou');
     const { services } = req.body; // Espera-se que o corpo contenha um array de categorias
     Logmessage(services);
  
