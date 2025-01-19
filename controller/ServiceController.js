@@ -152,7 +152,7 @@ const GetServiceByUserId = async (req, res) => {
         const connection = await pool.getConnection();
 
         // Query para buscar serviços por user_id
-        const [services] = await connection.query('SELECT * FROM services WHERE user_id = ?', [userId]);
+        const [services] = await connection.query('SELECT * FROM services WHERE user_id = ? ORDER BY servico_order', [userId]);
         connection.release();
 
         if (services.length === 0) {
