@@ -44,6 +44,25 @@ CREATE TABLE IF NOT EXISTS services (
     CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES users_catalog (id) ON DELETE CASCADE
 );
 
+CREATE TABLE `orders` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `user_id` INT NOT NULL, -- Chave estrangeira para a tabela de usuários
+  `store_id` INT NOT NULL, -- Chave estrangeira para a tabela de lojas
+  `order_date` DATETIME DEFAULT CURRENT_TIMESTAMP, -- Data e hora do pedido
+  `status` ENUM('pending', 'confirmed', 'shipped', 'completed', 'cancelled') 
+            DEFAULT 'pending' NOT NULL, -- Status do pedido
+  `total_amount` DECIMAL(10, 2) NOT NULL, -- Valor total do pedido
+  `payment_method` VARCHAR(100) NOT NULL, -- Método de pagamento
+  `phone` VARCHAR(100) NOT NULL, -- Método de pagamento
+  `delivery_address` TEXT, -- Endereço de entrega (se aplicável)
+  `notes` TEXT, -- Observações adicionais sobre o pedido
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Timestamp de criação
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, -- Timestamp de atualização automática
+  CONSTRAINT `fk_orders_user` FOREIGN KEY (`user_id`) REFERENCES `users_catalog`(`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_orders_store` FOREIGN KEY (`store_id`) REFERENCES `stores`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
 CREATE TABLE IF NOT EXISTS availability (
     id INT AUTO_INCREMENT PRIMARY KEY,
     service_id INT NOT NULL,
