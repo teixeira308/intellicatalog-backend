@@ -62,7 +62,7 @@ getOrderById = async (req, res) => {
 
         // Formatar a resposta com os itens
         res.status(200).json({
-            order,
+            ...order,
             items: itemsResult,
         });
     } catch (error) {
