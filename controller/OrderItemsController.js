@@ -18,19 +18,14 @@ createOrder = async (req, res) => {
         const orderId = orderResult.insertId;
         Logmessage('Pedido inserido no banco de dados. ID: ' + orderId);
 
-        // Preparar e inserir os itens do pedido
-        const itemsData = items.map(item => [
-            orderId,
-            item.product_id,
-            item.quantity,
-            item.unit_price,
-            item.total_price
-        ]);
-
-        await connection.query(
-            'INSERT INTO order_items (order_id, product_id, quantity, unit_price, total_price) VALUES ?',
-            [itemsData]
-        );
+        // Inserir cada item individualmente
+        for (const item of items) {
+            const { product_id, quantity, unit_price, total_price } = item;
+            await connection.query(
+                'INSERT INTO order_items (order_id, product_id, quantity, unit_price, total_price) VALUES (?, ?, ?, ?, ?)',
+                [orderId, product_id, quantity, unit_price, total_price]
+            );
+        }
 
         await connection.commit();
         connection.release();
@@ -44,6 +39,7 @@ createOrder = async (req, res) => {
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
 };
+
 
 
 module.exports = { createOrder}
