@@ -7,10 +7,10 @@ const OrderItemsController = require('../controller/OrderItemsController');
 
 // Rota para criar um pedido (order)
 router.post('/orders', login.required, OrderItemsController.createOrder);
-/*
-// Rota para obter todos os pedidos
-router.get('/orders', login.required, OrderItemsController.listAllOrders);
 
+// Rota para obter todos os pedidos
+router.get('/orders/:id', login.required, OrderItemsController.getOrderById);
+/*
 // Rota para obter um pedido específico
 router.get('/orders/:id', login.required, OrderItemsController.getOrder);
 
