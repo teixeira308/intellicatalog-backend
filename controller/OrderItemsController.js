@@ -40,6 +40,37 @@ createOrder = async (req, res) => {
     }
 };
 
+getOrderById = async (req, res) => {
+    const { id } = req.params; // ID do pedido
+
+    try {
+        const connection = await pool.getConnection();
+
+        // Buscar os dados do pedido
+        const [orderResult] = await connection.query('SELECT * FROM orders WHERE id = ?', [id]);
+
+        if (orderResult.length === 0) {
+            connection.release();
+            return res.status(404).json({ message: 'Pedido não encontrado' });
+        }
+
+        const order = orderResult[0];
+
+        // Buscar os itens do pedido
+        const [itemsResult] = await connection.query('SELECT * FROM order_items WHERE order_id = ?', [id]);
+        connection.release();
+
+        // Formatar a resposta com os itens
+        res.status(200).json({
+            order,
+            items: itemsResult,
+        });
+    } catch (error) {
+        Logmessage('Erro ao buscar pedido e itens no banco de dados: ' + error);
+        res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+};
 
 
-module.exports = { createOrder}
+
+module.exports = { createOrder, getOrderById}
