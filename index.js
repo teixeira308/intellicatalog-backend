@@ -10,7 +10,7 @@ const uploadStoreImageRouter = require('./routes/UploadStoreImageRouter');
 const ServicesRouter = require('./routes/ServicesRouter');
 const AvailabilityRouter = require('./routes/AvailabilityRouter');
 const AppointmentsRouter = require('./routes/AppointmentsRouter');
-const OrdersRouter = require('./routes/OrdersRoutes');
+const OrdersRouter = require('./routes/OrderRoutes');
 
 // Middleware para analisar o corpo das solicitações e habilitar CORS
 app.use(express.json());
