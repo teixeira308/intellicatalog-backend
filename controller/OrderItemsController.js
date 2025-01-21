@@ -2,25 +2,48 @@
 const pool = require('../config/dbConfig');
 const { Logmessage } = require("../helper/Tools");
 
-createOrder = async(req, res) => {
+
+createOrder = async (req, res) => {
     const orderData = req.body;
+    const { items, ...orderDetails } = orderData;
+
     Logmessage("Criar pedido, dados do body: " + JSON.stringify(orderData));
 
+    const connection = await pool.getConnection();
     try {
-        const connection = await pool.getConnection();
-        const [result] = await connection.query('INSERT INTO orders SET ?', orderData);
+        await connection.beginTransaction();
+
+        // Inserir a ordem
+        const [orderResult] = await connection.query('INSERT INTO orders SET ?', orderDetails);
+        const orderId = orderResult.insertId;
+        Logmessage('Pedido inserido no banco de dados. ID: ' + orderId);
+
+        // Preparar e inserir os itens do pedido
+        const itemsData = items.map(item => [
+            orderId,
+            item.product_id,
+            item.quantity,
+            item.unit_price,
+            item.total_price
+        ]);
+
+        await connection.query(
+            'INSERT INTO order_items (order_id, product_id, quantity, unit_price, total_price) VALUES ?',
+            [itemsData]
+        );
+
+        await connection.commit();
         connection.release();
 
-        const insertedId = result.insertId;
-
-        Logmessage('Pedido inserido no banco de dados. ID: ' + insertedId);
-        
-        res.status(201).json({ id: insertedId, ...orderData });
+        Logmessage('Itens do pedido inseridos no banco de dados');
+        res.status(201).json({ id: orderId, ...orderDetails, items });
     } catch (error) {
-        Logmessage('Erro ao inserir dados do pedido no banco de dados: ' + error);
+        await connection.rollback();
+        connection.release();
+        Logmessage('Erro ao inserir dados do pedido e itens no banco de dados: ' + error);
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
-}
+};
 
 
 module.exports = { createOrder}
