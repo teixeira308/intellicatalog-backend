@@ -2,7 +2,7 @@
 
 const express = require('express');
 const router = express.Router();
-const login = require('../middleware/login'); // Corrigido: middleware deveria ser em 'middleware', não 'midlleware'
+const login = require('../midleware/login'); // Corrigido: middleware deveria ser em 'middleware', não 'midlleware'
 const OrdersController = require('../controller/OrdersController');
 const OrderItemsController = require('../controller/OrderItemsController');
 
