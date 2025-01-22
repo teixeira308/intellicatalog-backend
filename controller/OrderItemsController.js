@@ -205,7 +205,47 @@ deleteOrderItem = async (req, res) => {
     }
 };
 
+addOrderItems = async (req, res) => {
+    const { order_id } = req.params; // ID do pedido
+    const { items } = req.body; // Lista de itens a serem adicionados
+
+    if (!items || !Array.isArray(items) || items.length === 0) {
+        return res.status(400).json({ message: 'Itens inválidos ou ausentes' });
+    }
+
+    try {
+        const connection = await pool.getConnection();
+
+        // Verificar se o pedido existe
+        const [orderResult] = await connection.query('SELECT * FROM orders WHERE id = ?', [order_id]);
+        if (orderResult.length === 0) {
+            connection.release();
+            return res.status(404).json({ message: 'Pedido não encontrado' });
+        }
+
+        // Adicionar cada item ao pedido
+        const insertItems = items.map(item => {
+            const { product_id, quantity, price } = item;
+            if (!product_id || !quantity || !price) {
+                throw new Error('Dados do item inválidos');
+            }
+
+            return connection.query(
+                'INSERT INTO order_items (order_id, product_id, quantity, unit_price, total_price) VALUES (?, ?, ?, ?, ?)',
+                [order_id, product_id, quantity, price]
+            );
+        });
+
+        // Executar todas as inserções
+        await Promise.all(insertItems);
+        connection.release();
+
+        res.status(201).json({ message: 'Itens adicionados ao pedido com sucesso' });
+    } catch (error) {
+        Logmessage('Erro ao adicionar itens ao pedido no banco de dados: ' + error);
+        res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+};
 
 
-
-module.exports = { createOrder, getOrderById, getOrders, updateOrder, deleteOrderItem}
+module.exports = { createOrder, getOrderById, getOrders, updateOrder, deleteOrderItem, addOrderItems}
