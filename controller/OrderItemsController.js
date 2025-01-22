@@ -176,20 +176,26 @@ updateOrderItems = async (req, res) => {
 };
 
 deleteOrderItem = async (req, res) => {
-    const { id } = req.params; // ID do item do pedido
+    const { product_id, order_id } = req.params; // IDs necessários para localizar o item do pedido
 
     try {
         const connection = await pool.getConnection();
 
         // Verificar se o item do pedido existe
-        const [itemResult] = await connection.query('SELECT * FROM order_items WHERE id = ?', [id]);
+        const [itemResult] = await connection.query(
+            'SELECT * FROM order_items WHERE product_id = ? AND order_id = ?',
+            [product_id, order_id] // Passar os valores como um array
+        );
         if (itemResult.length === 0) {
             connection.release();
             return res.status(404).json({ message: 'Item do pedido não encontrado' });
         }
 
         // Excluir o item do pedido
-        await connection.query('DELETE FROM order_items WHERE id = ?', [id]);
+        await connection.query(
+            'DELETE FROM order_items WHERE product_id = ? AND order_id = ?',
+            [product_id, order_id] // Passar os valores como um array
+        );
         connection.release();
 
         res.status(200).json({ message: 'Item do pedido excluído com sucesso' });
@@ -198,6 +204,7 @@ deleteOrderItem = async (req, res) => {
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
 };
+
 
 
 
