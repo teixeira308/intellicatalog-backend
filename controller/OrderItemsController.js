@@ -208,7 +208,7 @@ deleteOrderItem = async (req, res) => {
 addOrderItems = async (req, res) => {
     const { order_id } = req.params; // ID do pedido
     const { items } = req.body; // Lista de itens a serem adicionados
-
+    Logmessage(order_id)
     if (!items || !Array.isArray(items) || items.length === 0) {
         return res.status(400).json({ message: 'Itens inválidos ou ausentes' });
     }
