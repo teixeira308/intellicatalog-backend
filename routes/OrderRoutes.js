@@ -18,7 +18,7 @@ router.get('/orders/user/:id', login.required, OrderItemsController.getOrders);
 router.put('/orders/:id', login.required, OrderItemsController.updateOrder);
 
 // Rota para atualizar um item de pedido
-router.delete('/order-items/:order_id/item/:product_id', login.required, OrderItemsController.deleteOrderItem);
+router.delete('/order/:order_id/item/:product_id', login.required, OrderItemsController.deleteOrderItem);
 
 /*
 // Rota para excluir um pedido
