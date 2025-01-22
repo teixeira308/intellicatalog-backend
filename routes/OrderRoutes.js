@@ -16,14 +16,16 @@ router.get('/orders/user/:id', login.required, OrderItemsController.getOrders);
 
 // Rota para atualizar um pedido
 router.put('/orders/:id', login.required, OrderItemsController.updateOrder);
+
+// Rota para atualizar um item de pedido
+router.delete('/order-items/:order_id/item/:product_id', login.required, OrderItemsController.deleteOrderItem);
+
 /*
 // Rota para excluir um pedido
 router.delete('/orders/:id', login.required, OrderItemsController.deleteOrder);
 
 // ------------------------ Order Items ------------------------
 
-// Rota para atualizar um item de pedido
-router.put('/order-items/:order_id/:product_id', login.required, OrderItemsController.updateOrderItem);
 
 // Rota para excluir um item de pedido
 router.delete('/order-items/:order_id/:product_id', login.required, OrderItemsController.deleteOrderItem);

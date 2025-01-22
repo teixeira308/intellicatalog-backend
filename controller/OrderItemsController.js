@@ -107,7 +107,7 @@ getOrders = async (req, res) => {
 
 updateOrder = async (req, res) => {
     const { id } = req.params; // ID do pedido
-    const updates = req.body; // Campos a serem atualizados
+    const updates = req.body; // Campos a serem atualizados na tabela `orders`
 
     try {
         const connection = await pool.getConnection();
@@ -140,5 +140,65 @@ updateOrder = async (req, res) => {
     }
 };
 
+updateOrderItems = async (req, res) => {
+    const { id } = req.params; // ID do item do pedido
+    const updates = req.body; // Campos a serem atualizados na tabela `order_items`
 
-module.exports = { createOrder, getOrderById, getOrders, updateOrder}
+    try {
+        const connection = await pool.getConnection();
+
+        // Verificar se o item existe
+        const [itemResult] = await connection.query('SELECT * FROM order_items WHERE id = ?', [id]);
+        if (itemResult.length === 0) {
+            connection.release();
+            return res.status(404).json({ message: 'Item do pedido não encontrado' });
+        }
+
+        // Construir a query dinâmica com base nos campos recebidos
+        const fields = Object.keys(updates);
+        if (fields.length === 0) {
+            connection.release();
+            return res.status(400).json({ message: 'Nenhum campo para atualizar' });
+        }
+
+        const placeholders = fields.map((field) => `${field} = ?`).join(', ');
+        const values = fields.map((field) => updates[field]);
+
+        // Executar a atualização
+        await connection.query(`UPDATE order_items SET ${placeholders} WHERE id = ?`, [...values, id]);
+        connection.release();
+
+        res.status(200).json({ message: 'Item do pedido atualizado com sucesso' });
+    } catch (error) {
+        Logmessage('Erro ao atualizar o item do pedido no banco de dados: ' + error);
+        res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+};
+
+deleteOrderItem = async (req, res) => {
+    const { id } = req.params; // ID do item do pedido
+
+    try {
+        const connection = await pool.getConnection();
+
+        // Verificar se o item do pedido existe
+        const [itemResult] = await connection.query('SELECT * FROM order_items WHERE id = ?', [id]);
+        if (itemResult.length === 0) {
+            connection.release();
+            return res.status(404).json({ message: 'Item do pedido não encontrado' });
+        }
+
+        // Excluir o item do pedido
+        await connection.query('DELETE FROM order_items WHERE id = ?', [id]);
+        connection.release();
+
+        res.status(200).json({ message: 'Item do pedido excluído com sucesso' });
+    } catch (error) {
+        Logmessage('Erro ao excluir o item do pedido no banco de dados: ' + error);
+        res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+};
+
+
+
+module.exports = { createOrder, getOrderById, getOrders, updateOrder, deleteOrderItem}
