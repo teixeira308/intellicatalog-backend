@@ -105,6 +105,40 @@ getOrders = async (req, res) => {
     }
 };
 
+updateOrder = async (req, res) => {
+    const { id } = req.params; // ID do pedido
+    const updates = req.body; // Campos a serem atualizados
+
+    try {
+        const connection = await pool.getConnection();
+
+        // Verificar se o pedido existe
+        const [orderResult] = await connection.query('SELECT * FROM orders WHERE id = ?', [id]);
+        if (orderResult.length === 0) {
+            connection.release();
+            return res.status(404).json({ message: 'Pedido não encontrado' });
+        }
+
+        // Construir a query dinâmica com base nos campos recebidos
+        const fields = Object.keys(updates);
+        if (fields.length === 0) {
+            connection.release();
+            return res.status(400).json({ message: 'Nenhum campo para atualizar' });
+        }
+
+        const placeholders = fields.map((field) => `${field} = ?`).join(', ');
+        const values = fields.map((field) => updates[field]);
+
+        // Executar a atualização
+        await connection.query(`UPDATE orders SET ${placeholders} WHERE id = ?`, [...values, id]);
+        connection.release();
+
+        res.status(200).json({ message: 'Pedido atualizado com sucesso' });
+    } catch (error) {
+        Logmessage('Erro ao atualizar o pedido no banco de dados: ' + error);
+        res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+};
 
 
-module.exports = { createOrder, getOrderById, getOrders}
+module.exports = { createOrder, getOrderById, getOrders, updateOrder}
