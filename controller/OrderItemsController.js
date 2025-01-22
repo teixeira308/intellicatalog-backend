@@ -70,37 +70,41 @@ getOrderById = async (req, res) => {
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
 };
-
 getOrders = async (req, res) => {
-    const { id } = req.params; // ID do usuario
+    const { id } = req.params; // ID do usuário
 
     try {
         const connection = await pool.getConnection();
 
-        // Buscar os dados do pedido
-        const [orderResult] = await connection.query('SELECT * FROM orders WHERE user_id = ?', [id]);
+        // Buscar todos os pedidos do usuário
+        const [ordersResult] = await connection.query('SELECT * FROM orders WHERE user_id = ?', [id]);
 
-        if (orderResult.length === 0) {
+        if (ordersResult.length === 0) {
             connection.release();
-            return res.status(404).json({ message: 'Pedido não encontrado' });
+            return res.status(404).json({ message: 'Nenhum pedido encontrado para este usuário' });
         }
 
-        const order = orderResult[0];
+        // Para cada pedido, buscar os itens correspondentes
+        const ordersWithItems = await Promise.all(
+            ordersResult.map(async (order) => {
+                const [itemsResult] = await connection.query('SELECT * FROM order_items WHERE order_id = ?', [order.id]);
+                return {
+                    ...order,
+                    items: itemsResult,
+                };
+            })
+        );
 
-        // Buscar os itens do pedido
-        const [itemsResult] = await connection.query('SELECT * FROM order_items WHERE order_id = ?', [id]);
         connection.release();
 
-        // Formatar a resposta com os itens
-        res.status(200).json({
-            ...order,
-            items: itemsResult,
-        });
+        // Retornar a resposta com os pedidos e seus itens
+        res.status(200).json(ordersWithItems);
     } catch (error) {
-        Logmessage('Erro ao buscar pedido e itens no banco de dados: ' + error);
+        Logmessage('Erro ao buscar pedidos e itens no banco de dados: ' + error);
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
 };
+
 
 
 module.exports = { createOrder, getOrderById, getOrders}
