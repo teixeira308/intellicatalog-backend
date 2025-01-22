@@ -12,7 +12,7 @@ router.post('/orders', login.required, OrderItemsController.createOrder);
 router.get('/orders/:id', login.required, OrderItemsController.getOrderById);
 
 // Rota para obter um pedido 
-router.get('/orders/:id', login.required, OrderItemsController.getOrders);
+router.get('/orders/user/:id', login.required, OrderItemsController.getOrders);
 /*
 // Rota para atualizar um pedido
 router.put('/orders/:id', login.required, OrderItemsController.updateOrder);
