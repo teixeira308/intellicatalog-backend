@@ -201,8 +201,7 @@ addOrderItems = async (req, res) => {
             if (existingItem.length > 0) {
                 connection.release();
                 return res.status(400).json({
-                    message: `O produto com ID ${product_id} já está no pedido.`,
-                    existingItem: existingItem[0],
+                    message: `O produto já está no pedido.`,
                 });
             }
         }
