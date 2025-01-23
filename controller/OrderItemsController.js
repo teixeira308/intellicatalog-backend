@@ -225,8 +225,8 @@ addOrderItems = async (req, res) => {
 
         // Adicionar cada item ao pedido
         const insertItems = items.map(item => {
-            const { product_id, quantity, price } = item;
-            if (!product_id || !quantity || !price) {
+            const { product_id, quantity, unit_price, total_price } = item;
+            if (!product_id || !quantity || !unit_price || !total_price) {
                 throw new Error('Dados do item inválidos');
             }
 
