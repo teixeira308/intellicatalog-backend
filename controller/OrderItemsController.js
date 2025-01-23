@@ -149,26 +149,54 @@ deleteOrderItem = async (req, res) => {
         // Verificar se o item do pedido existe
         const [itemResult] = await connection.query(
             'SELECT * FROM order_items WHERE product_id = ? AND order_id = ?',
-            [product_id, order_id] // Passar os valores como um array
+            [product_id, order_id]
         );
         if (itemResult.length === 0) {
             connection.release();
             return res.status(404).json({ message: 'Item do pedido não encontrado' });
         }
 
+        // Recuperar o valor total do item antes de deletá-lo
+        const { total_price } = itemResult[0];
+
         // Excluir o item do pedido
         await connection.query(
             'DELETE FROM order_items WHERE product_id = ? AND order_id = ?',
-            [product_id, order_id] // Passar os valores como um array
+            [product_id, order_id]
         );
+
+        // Recalcular o valor total do pedido
+        const [orderResult] = await connection.query(
+            'SELECT total_amount FROM orders WHERE id = ?',
+            [order_id]
+        );
+
+        if (orderResult.length === 0) {
+            connection.release();
+            return res.status(404).json({ message: 'Pedido não encontrado' });
+        }
+
+        const currentTotalAmount = parseFloat(orderResult[0].total_amount || 0);
+        const updatedTotalAmount = currentTotalAmount - parseFloat(total_price);
+
+        // Atualizar o valor total do pedido na tabela `orders`
+        await connection.query(
+            'UPDATE orders SET total_amount = ? WHERE id = ?',
+            [updatedTotalAmount, order_id]
+        );
+
         connection.release();
 
-        res.status(200).json({ message: 'Item do pedido excluído com sucesso' });
+        res.status(200).json({
+            message: 'Item do pedido excluído com sucesso',
+            total_amount: updatedTotalAmount,
+        });
     } catch (error) {
         Logmessage('Erro ao excluir o item do pedido no banco de dados: ' + error);
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
 };
+
 
 addOrderItems = async (req, res) => {
     const { order_id } = req.params; // ID do pedido
