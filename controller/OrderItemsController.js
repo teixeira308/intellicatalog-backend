@@ -212,7 +212,7 @@ addOrderItems = async (req, res) => {
 
         // Calcular o novo total do pedido
         const [orderTotalResult] = await connection.query(
-            'SELECT total_price FROM orders WHERE id = ?',
+            'SELECT total_amount FROM orders WHERE id = ?',
             [order_id]
         );
 
@@ -220,7 +220,7 @@ addOrderItems = async (req, res) => {
         const updatedTotalPrice = currentTotalPrice + totalNewItemsPrice;
 
         // Atualizar o valor total do pedido na tabela `orders`
-        await connection.query('UPDATE orders SET total_price = ? WHERE id = ?', [updatedTotalPrice, order_id]);
+        await connection.query('UPDATE orders SET total_amount = ? WHERE id = ?', [updatedTotalPrice, order_id]);
 
         connection.release();
 
