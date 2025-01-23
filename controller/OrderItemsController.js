@@ -232,7 +232,7 @@ addOrderItems = async (req, res) => {
 
             return connection.query(
                 'INSERT INTO order_items (order_id, product_id, quantity, unit_price, total_price) VALUES (?, ?, ?, ?, ?)',
-                [order_id, product_id, quantity, price]
+                [order_id, product_id, quantity, unit_price,total_price]
             );
         });
 
