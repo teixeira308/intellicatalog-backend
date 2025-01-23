@@ -188,6 +188,25 @@ addOrderItems = async (req, res) => {
             return res.status(404).json({ message: 'Pedido não encontrado' });
         }
 
+        // Verificar se algum item já existe no pedido
+        for (const item of items) {
+            const { product_id } = item;
+
+            // Consultar se o produto já está no pedido
+            const [existingItem] = await connection.query(
+                'SELECT * FROM order_items WHERE order_id = ? AND product_id = ?',
+                [order_id, product_id]
+            );
+
+            if (existingItem.length > 0) {
+                connection.release();
+                return res.status(400).json({
+                    message: `O produto com ID ${product_id} já está no pedido.`,
+                    existingItem: existingItem[0],
+                });
+            }
+        }
+
         // Adicionar cada item ao pedido
         let totalNewItemsPrice = 0; // Soma do valor total dos itens adicionados
         const insertItems = items.map((item) => {
@@ -230,6 +249,7 @@ addOrderItems = async (req, res) => {
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
 };
+
 
 
 module.exports = { createOrder, getOrderById, getOrders, updateOrder, deleteOrderItem, addOrderItems}
