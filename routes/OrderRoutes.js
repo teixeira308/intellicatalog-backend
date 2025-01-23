@@ -24,15 +24,6 @@ router.put('/orders/:id', login.required, OrderItemsController.updateOrder);
 // Rota para atualizar um item de pedido
 router.delete('/orders/:order_id/item/:product_id', login.required, OrderItemsController.deleteOrderItem);
 
-
-/*
-// Rota para excluir um pedido
 router.delete('/orders/:id', login.required, OrderItemsController.deleteOrder);
-
-// ------------------------ Order Items ------------------------
-
-
-// Rota para excluir um item de pedido
-router.delete('/order-items/:order_id/:product_id', login.required, OrderItemsController.deleteOrderItem);
-*/
+ 
 module.exports = router;

@@ -277,6 +277,55 @@ addOrderItems = async (req, res) => {
     }
 };
 
+const deleteOrder = async (req, res) => {
+    const { order_id } = req.params; // ID do pedido a ser excluído
+
+    try {
+        const connection = await pool.getConnection();
+
+        // Verificar se o pedido existe
+        const [orderResult] = await connection.query(
+            'SELECT * FROM orders WHERE id = ?',
+            [order_id]
+        );
+        if (orderResult.length === 0) {
+            connection.release();
+            return res.status(404).json({ message: 'Pedido não encontrado' });
+        }
+
+        // Iniciar uma transação para garantir a integridade dos dados
+        await connection.beginTransaction();
+
+        try {
+            // Excluir itens do pedido na tabela `order_items`
+            await connection.query(
+                'DELETE FROM order_items WHERE order_id = ?',
+                [order_id]
+            );
+
+            // Excluir o pedido na tabela `orders`
+            await connection.query(
+                'DELETE FROM orders WHERE id = ?',
+                [order_id]
+            );
+
+            // Confirmar a transação
+            await connection.commit();
+
+            res.status(200).json({ message: 'Pedido excluído com sucesso' });
+        } catch (transactionError) {
+            // Reverter a transação em caso de erro
+            await connection.rollback();
+            throw transactionError;
+        } finally {
+            connection.release();
+        }
+    } catch (error) {
+        Logmessage('Erro ao excluir o pedido no banco de dados: ' + error);
+        res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+};
 
 
-module.exports = { createOrder, getOrderById, getOrders, updateOrder, deleteOrderItem, addOrderItems}
+
+module.exports = { createOrder, getOrderById, getOrders, updateOrder, deleteOrderItem, addOrderItems, deleteOrder}
