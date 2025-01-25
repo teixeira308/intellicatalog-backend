@@ -205,7 +205,7 @@ addOrderItems = async (req, res) => {
     if (!items || !Array.isArray(items) || items.length === 0) {
         return res.status(400).json({ message: 'Itens inválidos ou ausentes' });
     }
-
+    Logmessage('entrou')
     Logmessage(items)
 
     try {
