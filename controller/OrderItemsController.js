@@ -240,7 +240,7 @@ addOrderItems = async (req, res) => {
         let totalNewItemsPrice = 0; // Soma do valor total dos itens adicionados
         const insertItems = items.map((item) => {
             const { product_id, quantity, unit_price } = item;
-            Logmessage(item)
+            Logmessage('item:',item)
             // Verificar se os dados do item são válidos
             if (!product_id || !quantity || !unit_price) {
                 throw new Error('Dados do item inválidos');
