@@ -202,18 +202,25 @@ addOrderItems = async (req, res) => {
     const { order_id } = req.params; // ID do pedido
     const { items } = req.body; // Lista de itens a serem adicionados
 
+    console.log('--- [LOG] Início da Requisição ---');
+    console.log('order_id recebido:', order_id);
+    console.log('items recebidos:', JSON.stringify(items, null, 2));
+
     if (!items || !Array.isArray(items) || items.length === 0) {
+        console.log('[LOG] Erro: Itens inválidos ou ausentes');
         return res.status(400).json({ message: 'Itens inválidos ou ausentes' });
     }
-    Logmessage('entrou')
-    Logmessage(items)
 
     try {
         const connection = await pool.getConnection();
+        console.log('[LOG] Conexão com o banco de dados estabelecida.');
 
         // Verificar se o pedido existe
         const [orderResult] = await connection.query('SELECT * FROM orders WHERE id = ?', [order_id]);
+        console.log('[LOG] Resultado da consulta do pedido:', orderResult);
+
         if (orderResult.length === 0) {
+            console.log('[LOG] Erro: Pedido não encontrado');
             connection.release();
             return res.status(404).json({ message: 'Pedido não encontrado' });
         }
@@ -222,13 +229,15 @@ addOrderItems = async (req, res) => {
         for (const item of items) {
             const { product_id } = item;
 
-            // Consultar se o produto já está no pedido
+            console.log('[LOG] Verificando item:', item);
+
             const [existingItem] = await connection.query(
                 'SELECT * FROM order_items WHERE order_id = ? AND product_id = ?',
                 [order_id, product_id]
             );
 
             if (existingItem.length > 0) {
+                console.log(`[LOG] Erro: Produto ${product_id} já está no pedido.`);
                 connection.release();
                 return res.status(400).json({
                     message: `O produto já está no pedido.`,
@@ -240,14 +249,22 @@ addOrderItems = async (req, res) => {
         let totalNewItemsPrice = 0; // Soma do valor total dos itens adicionados
         const insertItems = items.map((item) => {
             const { product_id, quantity, unit_price } = item;
-            Logmessage('item:',item)
+
+            console.log('[LOG] Adicionando item:', item);
+
             // Verificar se os dados do item são válidos
             if (!product_id || !quantity || !unit_price) {
+                console.log('[LOG] Erro: Dados do item inválidos:', item);
                 throw new Error('Dados do item inválidos');
             }
 
             const total_price = quantity * unit_price; // Calcular o preço total do item
             totalNewItemsPrice += total_price; // Somar ao total dos novos itens
+
+            console.log('[LOG] Total calculado do item:', {
+                total_price,
+                totalNewItemsPrice,
+            });
 
             return connection.query(
                 'INSERT INTO order_items (order_id, product_id, quantity, unit_price, total_price) VALUES (?, ?, ?, ?, ?)',
@@ -255,7 +272,7 @@ addOrderItems = async (req, res) => {
             );
         });
 
-        // Executar todas as inserções
+        console.log('[LOG] Inserindo itens no banco de dados...');
         await Promise.all(insertItems);
 
         // Calcular o novo total do pedido
@@ -264,20 +281,32 @@ addOrderItems = async (req, res) => {
             [order_id]
         );
 
-        const currentTotalPrice = parseFloat(orderTotalResult[0].total_price || 0);
+        console.log('[LOG] Resultado da consulta de total do pedido:', orderTotalResult);
+
+        const currentTotalPrice = parseFloat(orderTotalResult[0]?.total_amount || 0);
         const updatedTotalPrice = currentTotalPrice + totalNewItemsPrice;
+
+        console.log('[LOG] Atualizando o total do pedido:', {
+            currentTotalPrice,
+            updatedTotalPrice,
+        });
 
         // Atualizar o valor total do pedido na tabela `orders`
         await connection.query('UPDATE orders SET total_amount = ? WHERE id = ?', [updatedTotalPrice, order_id]);
 
         connection.release();
 
-        res.status(201).json({ message: 'Itens adicionados ao pedido com sucesso e total atualizado', total_price: updatedTotalPrice });
+        console.log('[LOG] Itens adicionados com sucesso e total atualizado.');
+        res.status(201).json({ 
+            message: 'Itens adicionados ao pedido com sucesso e total atualizado', 
+            total_price: updatedTotalPrice 
+        });
     } catch (error) {
-        Logmessage('Erro ao adicionar itens ao pedido no banco de dados: ' + error);
+        console.error('[LOG] Erro ao adicionar itens ao pedido no banco de dados:', error);
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
 };
+
 
 const deleteOrder = async (req, res) => {
     const { order_id } = req.params; // ID do pedido a ser excluído
