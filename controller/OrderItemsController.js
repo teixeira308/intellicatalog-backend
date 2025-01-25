@@ -206,6 +206,8 @@ addOrderItems = async (req, res) => {
         return res.status(400).json({ message: 'Itens inválidos ou ausentes' });
     }
 
+    Logmessage(items)
+
     try {
         const connection = await pool.getConnection();
 
