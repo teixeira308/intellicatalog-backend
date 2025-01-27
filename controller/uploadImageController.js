@@ -43,26 +43,52 @@ getProductImageById = async (req, res) => {
 // Configuração do Multer para salvar os arquivos no disco
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, 'uploads/'); // Diretório onde os arquivos serão salvos
+        const uploadPath = 'uploads/';
+
+        Logmessage(`Definindo destino do upload. Diretório: ${uploadPath}`);
+        
+        // Verificar se o diretório existe e criar caso não exista
+        try {
+            if (!fs.existsSync(uploadPath)) {
+                fs.mkdirSync(uploadPath, { recursive: true });
+                Logmessage(`Diretório criado: ${uploadPath}`);
+            }
+        } catch (error) {
+            Logmessage(`Erro ao criar o diretório ${uploadPath}`, error);
+            return cb(new Error(`Erro ao criar o diretório de upload: ${error.message}`), null);
+        }
+
+        cb(null, uploadPath); // Diretório onde os arquivos serão salvos
     },
     filename: function (req, file, cb) {
-        Logmessage("Upload imagem usuario: "+req.user.userId+" - produto: "+req.params.product_id)
+        Logmessage(`Iniciando processamento do nome do arquivo. Usuário: ${req.user?.userId || 'desconhecido'}, Produto: ${req.params?.product_id || 'desconhecido'}`);
         
-        
-        // Obter a data e hora atual
-        const currentDateTime = new Date().toISOString().replace(/[-:]/g, '').replace('T', '').replace(/\..+/, '');
-        
-        // Obter o ID do usuário
-        const userid = req.user.userId; // Supondo que o ID do usuário está disponível na requisição
+        try {
+            // Obter a data e hora atual
+            const currentDateTime = new Date().toISOString()
+                .replace(/[-:]/g, '')
+                .replace('T', '')
+                .replace(/\..+/, '');
 
-        // Obter o nome do arquivo original
-        const originalFileName = file.originalname;
-        const { product_id } = req.params;
+            // Obter o ID do usuário
+            const userId = req.user?.userId || 'unknown'; // Caso o ID do usuário não esteja disponível
 
-        // Gerar o nome do arquivo usando a data e hora atual, o ID do usuário e o nome do arquivo original
-        const fileName = `${userid}-${product_id}-${currentDateTime}-${originalFileName}`;
+            // Obter o ID do produto
+            const productId = req.params?.product_id || 'unknown'; // Caso o ID do produto não esteja disponível
 
-        cb(null, fileName); // Nome do arquivo salvo
+            // Obter o nome original do arquivo
+            const originalFileName = file.originalname.replace(/\s+/g, '_'); // Substituir espaços por underscores para evitar problemas
+
+            // Gerar o nome do arquivo
+            const fileName = `${userId}-${productId}-${currentDateTime}-${originalFileName}`;
+
+            Logmessage(`Nome do arquivo gerado: ${fileName}`);
+
+            cb(null, fileName); // Nome do arquivo salvo
+        } catch (error) {
+            Logmessage('Erro ao gerar o nome do arquivo', error);
+            return cb(new Error('Erro ao gerar o nome do arquivo'), null);
+        }
     }
 });
 
@@ -73,48 +99,49 @@ const upload = multer({ storage: storage });
 const uploadSingleFile = upload.single('file');
 
 const UploadFile = async (req, res) => {
-    const productImageData = req.body;
-    Logmessage("Criar produto, dados do body: "+ JSON.stringify(productImageData));
-    Logmessage("Product_id: "+req.params.product_id);
-    Logmessage("User_id: "+JSON.stringify(req.user.userId));
+    Logmessage(`Início do upload de imagem para o produto: ${req.params.product_id} pelo usuário: ${req.user.userId}`);
+    
     if (!req.file) {
+        Logmessage('Nenhum arquivo foi enviado na requisição.');
         return res.status(400).json({ message: 'Nenhum arquivo foi enviado' });
     }
 
     const { description } = req.body;
     const { userId } = req.user;
-    const {  product_id } = req.params;
+    const { product_id } = req.params;
     const nomearquivo = req.file.filename;
-    const tamanho = req.file.size; 
-    const tipo = req.file.originalname.split('.').pop().toLowerCase()
+    const tamanho = req.file.size;
+    const tipo = req.file.originalname.split('.').pop().toLowerCase();
+
+    Logmessage(`Detalhes do arquivo recebido: Nome: ${nomearquivo}, Tamanho: ${tamanho}, Tipo: ${tipo}`);
 
     try {
-        // Gravar os detalhes do arquivo no banco de dados
+        // Inserindo os detalhes do arquivo no banco de dados
+        Logmessage('Tentando inserir detalhes do arquivo no banco de dados...');
         const connection = await pool.getConnection();
-        const query = 'INSERT INTO products_images (description, nomearquivo,tipo,tamanho,product_id,user_id) VALUES (?, ?, ?, ?,?,?)';
-        const values = [description, nomearquivo, tipo, tamanho, product_id,userId];
+        const query = 'INSERT INTO products_images (description, nomearquivo, tipo, tamanho, product_id, user_id) VALUES (?, ?, ?, ?, ?, ?)';
+        const values = [description, nomearquivo, tipo, tamanho, product_id, userId];
         const [result] = await connection.query(query, values);
 
-        
-        
-        const insertedId = result.insertId; // Aqui está o ID gerado automaticamente pelo MySQL
+        Logmessage(`Arquivo inserido no banco de dados com sucesso. ID gerado: ${result.insertId}`);
 
-        // Buscar os dados recém-inseridos no banco de dados
-        const [rows] = await connection.query('SELECT * FROM products_images WHERE id = ?', [insertedId]);
+        // Recuperar os detalhes do arquivo inserido
+        const [rows] = await connection.query('SELECT * FROM products_images WHERE id = ?', [result.insertId]);
         connection.release();
 
         if (!rows.length) {
+            Logmessage('Falha ao recuperar os detalhes do arquivo recém-inserido no banco de dados.');
             return res.status(404).json({ message: 'Detalhes do arquivo não encontrados' });
         }
 
-        // Retornar os dados do arquivo junto com a mensagem de sucesso
-        const insertedFileDetails = rows[0];
-        res.status(200).json({ message: 'Arquivo enviado com sucesso', fileDetails: insertedFileDetails });
+        Logmessage(`Upload concluído com sucesso para o arquivo: ${nomearquivo}`);
+        res.status(200).json({ message: 'Arquivo enviado com sucesso', fileDetails: rows[0] });
     } catch (error) {
+        Logmessage('Erro durante o upload do arquivo:', error);
         console.error('Erro ao inserir detalhes do arquivo no banco de dados:', error);
         return res.status(500).json({ message: 'Erro interno do servidor' });
     }
-}
+};
 
 const getProductImagesByUserId = async (req, res) => {
     const userId = req.params.userid; 
