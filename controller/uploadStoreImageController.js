@@ -78,7 +78,7 @@ const UploadFile = async (req, res) => {
     try {
         // Gravar os detalhes do arquivo no banco de dados
         const connection = await pool.getConnection();
-        const query = 'INSERT INTO store_images ( nomearquivo,tipo,tamanho,store_id,user_id) VALUES (?, ?, ?, ?,?,?)';
+        const query = 'INSERT INTO store_images ( nomearquivo,tipo,tamanho,store_id,user_id) VALUES (?, ?, ?, ?,?)';
         const values = [nomearquivo, tipo, tamanho, store_id, userId];
         const [result] = await connection.query(query, values);
         const insertedId = result.insertId; // Aqui está o ID gerado automaticamente pelo MySQL

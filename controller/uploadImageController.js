@@ -119,7 +119,7 @@ const UploadFile = async (req, res) => {
         // Inserindo os detalhes do arquivo no banco de dados
         Logmessage('Tentando inserir detalhes do arquivo no banco de dados...');
         const connection = await pool.getConnection();
-        const query = 'INSERT INTO products_images ( nomearquivo, tipo, tamanho, product_id, user_id) VALUES (?, ?, ?, ?, ?, ?)';
+        const query = 'INSERT INTO products_images ( nomearquivo, tipo, tamanho, product_id, user_id) VALUES (?, ?, ?, ?, ?)';
         const values = [ nomearquivo, tipo, tamanho, product_id, userId];
         const [result] = await connection.query(query, values);
 
