@@ -106,7 +106,7 @@ const UploadFile = async (req, res) => {
         return res.status(400).json({ message: 'Nenhum arquivo foi enviado' });
     }
 
-    const { description } = req.body;
+    
     const { userId } = req.user;
     const { product_id } = req.params;
     const nomearquivo = req.file.filename;
@@ -119,8 +119,8 @@ const UploadFile = async (req, res) => {
         // Inserindo os detalhes do arquivo no banco de dados
         Logmessage('Tentando inserir detalhes do arquivo no banco de dados...');
         const connection = await pool.getConnection();
-        const query = 'INSERT INTO products_images (description, nomearquivo, tipo, tamanho, product_id, user_id) VALUES (?, ?, ?, ?, ?, ?)';
-        const values = [description, nomearquivo, tipo, tamanho, product_id, userId];
+        const query = 'INSERT INTO products_images ( nomearquivo, tipo, tamanho, product_id, user_id) VALUES (?, ?, ?, ?, ?, ?)';
+        const values = [ nomearquivo, tipo, tamanho, product_id, userId];
         const [result] = await connection.query(query, values);
 
         Logmessage(`Arquivo inserido no banco de dados com sucesso. ID gerado: ${result.insertId}`);

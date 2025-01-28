@@ -68,7 +68,7 @@ const UploadFile = async (req, res) => {
         return res.status(400).json({ message: 'Nenhum arquivo foi enviado' });
     }
 
-    const { description } = req.body;
+ 
     const { userId } = req.user;
     const { store_id } = req.params;
     const nomearquivo = req.file.filename;
@@ -78,8 +78,8 @@ const UploadFile = async (req, res) => {
     try {
         // Gravar os detalhes do arquivo no banco de dados
         const connection = await pool.getConnection();
-        const query = 'INSERT INTO store_images (description, nomearquivo,tipo,tamanho,store_id,user_id) VALUES (?, ?, ?, ?,?,?)';
-        const values = [description, nomearquivo, tipo, tamanho, store_id, userId];
+        const query = 'INSERT INTO store_images ( nomearquivo,tipo,tamanho,store_id,user_id) VALUES (?, ?, ?, ?,?,?)';
+        const values = [nomearquivo, tipo, tamanho, store_id, userId];
         const [result] = await connection.query(query, values);
         const insertedId = result.insertId; // Aqui está o ID gerado automaticamente pelo MySQL
 
