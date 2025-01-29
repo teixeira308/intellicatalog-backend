@@ -387,7 +387,7 @@ updateOrderStatus = async (req, res) => {
         await connection.query(`UPDATE orders SET ${placeholders} WHERE id = ?`, [...values, id]);
 
         // Se o status foi alterado para "confirmado", reduz o estoque dos produtos do pedido
-        if (updates.status === "confirmado") {
+        if (updates.status === "confirmada") {
             await connection.query(`
                 UPDATE products p
                 JOIN order_items oi ON oi.product_id = p.id
