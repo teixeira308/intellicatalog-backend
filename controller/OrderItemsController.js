@@ -357,6 +357,60 @@ const deleteOrder = async (req, res) => {
     }
 };
 
+updateOrderStatus = async (req, res) => {
+    const { id } = req.params; // ID do pedido
+    const updates = req.body; // Campos a serem atualizados na tabela `orders`
+
+    try {
+        const connection = await pool.getConnection();
+
+        // Verificar se o pedido existe
+        const [orderResult] = await connection.query('SELECT * FROM orders WHERE id = ?', [id]);
+        if (orderResult.length === 0) {
+            connection.release();
+            return res.status(404).json({ message: 'Pedido não encontrado' });
+        }
+
+        // Construir a query dinâmica com base nos campos recebidos
+        const fields = Object.keys(updates);
+        if (fields.length === 0) {
+            connection.release();
+            return res.status(400).json({ message: 'Nenhum campo para atualizar' });
+        }
+
+        await connection.beginTransaction(); // Iniciar transação
+
+        const placeholders = fields.map((field) => `${field} = ?`).join(', ');
+        const values = fields.map((field) => updates[field]);
+
+        // Atualizar o pedido
+        await connection.query(`UPDATE orders SET ${placeholders} WHERE id = ?`, [...values, id]);
+
+        // Se o status foi alterado para "confirmado", reduz o estoque dos produtos do pedido
+        if (updates.status === "confirmado") {
+            await connection.query(`
+                UPDATE products p
+                JOIN order_items oi ON oi.product_id = p.id
+                SET p.estoque = p.estoque - oi.quantity
+                WHERE oi.order_id = ?`, 
+                [id]
+            );
+        }
+
+        await connection.commit(); // Confirma a transação
+        connection.release();
+
+        res.status(200).json({ message: 'Pedido atualizado com sucesso' });
+    } catch (error) {
+        if (connection) {
+            await connection.rollback(); // Desfaz a transação em caso de erro
+            connection.release();
+        }
+        Logmessage('Erro ao atualizar o pedido e estoque: ' + error);
+        res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+};
 
 
-module.exports = { createOrder, getOrderById, getOrders, updateOrder, deleteOrderItem, addOrderItems, deleteOrder}
+
+module.exports = { createOrder, getOrderById, getOrders, updateOrder, deleteOrderItem, addOrderItems, deleteOrder,updateOrderStatus}
