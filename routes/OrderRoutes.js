@@ -22,7 +22,7 @@ router.get('/orders/user/:id', login.required, OrderItemsController.getOrders);
 router.put('/orders/:id', login.required, OrderItemsController.updateOrder);
 
 // Rota para atualizar um pedido
-router.put('/orders/:id/update-stock', login.required, OrderItemsController.updateOrderStatus);
+router.put('/orders/:id/update-status', login.required, OrderItemsController.updateOrderStatus);
 
 // Rota para atualizar um item de pedido
 router.delete('/orders/:order_id/item/:product_id', login.required, OrderItemsController.deleteOrderItem);
