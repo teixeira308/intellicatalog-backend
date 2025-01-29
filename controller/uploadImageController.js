@@ -57,12 +57,13 @@ const storage = multer.diskStorage({
             Logmessage(`Erro ao criar o diretório ${uploadPath}`, error);
             return cb(new Error(`Erro ao criar o diretório de upload: ${error.message}`), null);
         }
+        Logmessage("Arquivo recebido no backend:", req.file);
 
         cb(null, uploadPath); // Diretório onde os arquivos serão salvos
     },
     filename: function (req, file, cb) {
         Logmessage(`Iniciando processamento do nome do arquivo. Usuário: ${req.user?.userId || 'desconhecido'}, Produto: ${req.params?.product_id || 'desconhecido'}`);
-        
+        Logmessage('file: ',file)
         try {
             // Obter a data e hora atual
             const currentDateTime = new Date().toISOString()
