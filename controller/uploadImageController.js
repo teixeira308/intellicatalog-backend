@@ -31,6 +31,7 @@ getProductImageById = async (req, res) => {
         }
 
         // Se tudo estiver correto, enviar o arquivo para download
+        res.setHeader('Content-Type', 'image/png');
         res.setHeader('Content-Disposition', 'inline');
         res.download(filePath);
     } catch (error) {
