@@ -8,6 +8,9 @@ const path = require('path');
 
 const { v4: uuidv4 } = require('uuid'); // Importando a função para gerar UUID
 
+//heif convert
+const sizeOf = require('image-size');
+const { execSync } = require('child_process');
 
 const { Logmessage } = require("../helper/Tools");
 
@@ -38,18 +41,34 @@ const storage = multer.diskStorage({
         cb(null, 'uploads/'); // Diretório onde os arquivos serão salvos
     },
     filename: function (req, file, cb) {
-        Logmessage("Upload imagem store: " + req.user.userId + " - store_id : " + req.params.store_id);
+        Logmessage(`Iniciando processamento do nome do arquivo. Usuário: ${req.user?.userId || 'desconhecido'}, Produto: ${req.params?.product_id || 'desconhecido'}`);
+        Logmessage('file: ',file)
+        try {
+            // Obter a data e hora atual
+            const currentDateTime = new Date().toISOString()
+                .replace(/[-:]/g, '')
+                .replace('T', '')
+                .replace(/\..+/, '');
 
-        // Gerar um UUID para o nome do arquivo
-        const uniqueFileName = uuidv4(); 
+            // Obter o ID do usuário
+            const userId = req.user?.userId || 'unknown'; // Caso o ID do usuário não esteja disponível
 
-        // Obter a extensão do arquivo original
-        const fileExtension = path.extname(file.originalname).toLowerCase();
+            // Obter o ID do produto
+            const productId = req.params?.product_id || 'unknown'; // Caso o ID do produto não esteja disponível
 
-        // Nome final do arquivo (UUID + extensão)
-        const fileName = `${uniqueFileName}${fileExtension}`;
+            // Obter o nome original do arquivo
+            const originalFileName = file.originalname.replace(/\s+/g, '_'); // Substituir espaços por underscores para evitar problemas
 
-        cb(null, fileName); // Nome do arquivo salvo
+            // Gerar o nome do arquivo
+            const fileName = `${userId}-${productId}-${currentDateTime}-${originalFileName}`;
+
+            Logmessage(`Nome do arquivo gerado: ${fileName}`);
+
+            cb(null, fileName); // Nome do arquivo salvo
+        } catch (error) {
+            Logmessage('Erro ao gerar o nome do arquivo', error);
+            return cb(new Error('Erro ao gerar o nome do arquivo'), null);
+        }
     }
 });
 
@@ -65,17 +84,40 @@ const UploadFile = async (req, res) => {
     Logmessage("store_id: " + req.params.store_id);
     Logmessage("User_id: " + JSON.stringify(req.user.userId));
     if (!req.file) {
+        Logmessage('Nenhum arquivo foi enviado na requisição.');
         return res.status(400).json({ message: 'Nenhum arquivo foi enviado' });
     }
 
- 
+
     const { userId } = req.user;
     const { store_id } = req.params;
     const nomearquivo = req.file.filename;
     const tamanho = req.file.size;
     const tipo = req.file.originalname.split('.').pop().toLowerCase()
 
+    Logmessage(`Detalhes do arquivo recebido: Nome: ${nomearquivo}, Tamanho: ${tamanho}, Tipo: ${tipo}`);
+
     try {
+        // Verificar o tipo real da imagem usando image-size
+        const filePath = path.join('uploads', nomearquivo);
+        const dimensions = sizeOf(filePath);  // Tenta pegar o tipo real da imagem
+
+        if (!dimensions) {
+            return res.status(400).json({ message: 'Imagem inválida' });
+        }
+
+        tipo = dimensions.type;  // Agora tipo será 'jpg', 'heif', etc.
+
+        Logmessage(`Tipo da imagem detectado: ${tipo}`);
+        if (tipo === 'heif' || tipo === 'heic') {
+            const convertedFilePath = filePath.replace('.heif', '.jpg').replace('.heic', '.jpg');
+            execSync(`convert ${filePath} ${convertedFilePath}`);
+            Logmessage(`Imagem HEIF convertida para JPEG: ${convertedFilePath}`);
+
+            fs.renameSync(convertedFilePath, filePath);  // Substituir o arquivo original com o convertido
+            nomearquivo = nomearquivo.replace('.heif', '.jpg').replace('.heic', '.jpg');  // Atualizar o nome do arquivo
+            tipo = 'jpeg';  // Atualizar o tipo para 'jpeg' após conversão
+        }
         // Gravar os detalhes do arquivo no banco de dados
         const connection = await pool.getConnection();
         const query = 'INSERT INTO store_images ( nomearquivo,tipo,tamanho,store_id,user_id) VALUES (?, ?, ?, ?,?)';
@@ -204,7 +246,7 @@ const getStoreImageDownload = async (req, res) => {
             parametros = [store_id, arquivo]
         } else {
             query = 'SELECT * FROM store_images WHERE  user_id = ? AND store_id = ? AND nomearquivo = ?'
-            parametros = [user_id,store_id, arquivo]
+            parametros = [user_id, store_id, arquivo]
         }
         const connection = await pool.getConnection();
         const [rows] = await connection.query(query, parametros);
