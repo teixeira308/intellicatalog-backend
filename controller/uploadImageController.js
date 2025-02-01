@@ -130,6 +130,7 @@ const UploadFile = async (req, res) => {
         }
 
         try {
+            Logmessage('entrou pro sharp funcionar')
             // Testa a leitura do arquivo para verificar integridade
             await sharp(originalFilePath).metadata();
         } catch (err) {
