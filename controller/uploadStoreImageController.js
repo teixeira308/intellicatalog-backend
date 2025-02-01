@@ -91,7 +91,7 @@ const UploadFile = async (req, res) => {
 
     const { userId } = req.user;
     const { store_id } = req.params;
-    const nomearquivo = req.file.filename;
+    let nomearquivo = req.file.filename;
     const tamanho = req.file.size;
     let tipo = req.file.originalname.split('.').pop().toLowerCase()
 
