@@ -81,7 +81,7 @@ const storage = multer.diskStorage({
         cb(null, 'uploads/'); // Diretório onde os arquivos serão salvos
     },
     filename: function (req, file, cb) {
-        Logmessage("Upload imagem store: " + req.user.userId + " - store_id : " + req.params.store_id);
+        
 
         // Gerar um UUID para o nome do arquivo
         const uniqueFileName = uuidv4(); 
@@ -91,7 +91,7 @@ const storage = multer.diskStorage({
 
         // Nome final do arquivo (UUID + extensão)
         const fileName = `${uniqueFileName}${fileExtension}`;
-
+        Logmessage("Upload imagem store: " + req.user.userId + " - store_id : " + req.params.store_id +" - nome do arquivo: "+fileName);
         cb(null, fileName); // Nome do arquivo salvo
     }
 });
@@ -169,6 +169,7 @@ const UploadFile = async (req, res) => {
 
 const getProductImagesByUserId = async (req, res) => {
     const userId = req.params.userid; 
+    Logmessage("Usuario: "+userId)
     try {
         // Consultar templates no banco de dados com base no ID do usuário
         const connection = await pool.getConnection();
@@ -177,13 +178,14 @@ const getProductImagesByUserId = async (req, res) => {
        
         res.status(200).json(rows);
     } catch (error) {
-        console.error('Erro ao buscar product images por ID do usuário:', error);
+        Logmessage('Erro ao buscar product images por ID do usuário:', error);
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
 }
 
 const getProductImagesByProductId = async (req, res) => {
     const product_id = req.params.product_id; 
+    Logmessage("Produto: "+product_id)
     try {
         // Consultar templates no banco de dados com base no ID do usuário
         const connection = await pool.getConnection();
