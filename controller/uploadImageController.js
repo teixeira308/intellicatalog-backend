@@ -14,19 +14,22 @@ const { v4: uuidv4 } = require('uuid'); // Importando a função para gerar UUID
 const getProductImageById = async (req, res) => {
     const { product_id } = req.params;
     const { arquivo } = req.query;
-
+    Logmessage('Obter imagem por id - produto: '+product_id)
+    Logmessage('Obter imagem por id - arquivo: '+arquivo)
     try {
         // Verificar se o arquivo foi especificado
         if (!arquivo) {
+            Logmessage('Nome do arquivo não especificado')
             return res.status(400).json({ message: 'Nome do arquivo não especificado' });
         }
 
         // Caminho absoluto do arquivo
         const filePath = path.resolve(__dirname, '..', 'uploads', arquivo);
-        console.log(`Tentando servir: ${filePath}`);
+        Logmessage(`Tentando servir: ${filePath}`);
 
         // Verificar se o arquivo existe
         if (!fs.existsSync(filePath)) {
+            Logmessage('Arquivo não encontrado')
             return res.status(404).json({ message: 'Arquivo não encontrado' });
         }
 
@@ -39,6 +42,7 @@ const getProductImageById = async (req, res) => {
         connection.release();
 
         if (!rows.length) {
+            Logmessage('Usuário não tem acesso a este documento')
             return res.status(403).json({ message: 'Usuário não tem acesso a este documento' });
         }
 
@@ -61,12 +65,12 @@ const getProductImageById = async (req, res) => {
                 mimeType = 'image/gif';
                 break;
         }
-
+        Logmessage(res.json)
         res.setHeader('Content-Type', mimeType);
         res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache por um dia
         res.sendFile(filePath);
     } catch (error) {
-        console.error('Erro ao processar a imagem:', error);
+        Logmessage('Erro ao processar a imagem:', error);
         res.status(500).json({ message: 'Erro interno ao processar a imagem' });
     }
 };
