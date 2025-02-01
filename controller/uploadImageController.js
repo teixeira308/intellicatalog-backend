@@ -129,17 +129,16 @@ const UploadFile = async (req, res) => {
             return res.status(400).json({ message: 'Arquivo de imagem inválido ou corrompido' });
         }
 
-       
-
         try {
-            // Processa a imagem
+            // Processa a imagem e remove metadados
             await sharp(originalFilePath)
                 .rotate() // Corrige a orientação
                 .toFormat('jpeg')
-                .jpeg({ quality: 90 }) // Define qualidade
+                .jpeg({ quality: 90 })
+                .withMetadata({}) // REMOVE OS METADADOS EXIF
                 .toFile(processedFilePath);
 
-            Logmessage(`Imagem processada com sucesso para o produto: ${product_id}`);
+            Logmessage(`Imagem processada e metadados removidos com sucesso para o produto: ${product_id}`);
 
             // Deleta o arquivo original para economizar espaço
             fs.unlinkSync(originalFilePath);
@@ -169,6 +168,9 @@ const UploadFile = async (req, res) => {
         return res.status(500).json({ message: 'Erro interno do servidor' });
     }
 };
+
+module.exports = { UploadFile };
+
 
 
 const getProductImagesByUserId = async (req, res) => {
