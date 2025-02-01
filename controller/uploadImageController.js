@@ -8,6 +8,9 @@ const path = require('path');
 
 const {Logmessage} = require( "../helper/Tools");
 
+
+const { v4: uuidv4 } = require('uuid'); // Importando a função para gerar UUID
+
 const getProductImageById = async (req, res) => {
     const { product_id } = req.params;
     const { arquivo } = req.query;
@@ -69,59 +72,25 @@ const getProductImageById = async (req, res) => {
 };
 
 
-// Configuração do Multer para salvar os arquivos no disco
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        const uploadPath = 'uploads/';
-
-        Logmessage(`Definindo destino do upload. Diretório: ${uploadPath}`);
-        
-        // Verificar se o diretório existe e criar caso não exista
-        try {
-            if (!fs.existsSync(uploadPath)) {
-                fs.mkdirSync(uploadPath, { recursive: true });
-                Logmessage(`Diretório criado: ${uploadPath}`);
-            }
-        } catch (error) {
-            Logmessage(`Erro ao criar o diretório ${uploadPath}`, error);
-            return cb(new Error(`Erro ao criar o diretório de upload: ${error.message}`), null);
-        }
-        Logmessage("Arquivo recebido no backend:", req.file);
-
-        cb(null, uploadPath); // Diretório onde os arquivos serão salvos
+        cb(null, 'uploads/'); // Diretório onde os arquivos serão salvos
     },
     filename: function (req, file, cb) {
-        Logmessage(`Iniciando processamento do nome do arquivo. Usuário: ${req.user?.userId || 'desconhecido'}, Produto: ${req.params?.product_id || 'desconhecido'}`);
-        Logmessage('file: ',file)
-        try {
-            // Obter a data e hora atual
-            const currentDateTime = new Date().toISOString()
-                .replace(/[-:]/g, '')
-                .replace('T', '')
-                .replace(/\..+/, '');
+        Logmessage("Upload imagem store: " + req.user.userId + " - store_id : " + req.params.store_id);
 
-            // Obter o ID do usuário
-            const userId = req.user?.userId || 'unknown'; // Caso o ID do usuário não esteja disponível
+        // Gerar um UUID para o nome do arquivo
+        const uniqueFileName = uuidv4(); 
 
-            // Obter o ID do produto
-            const productId = req.params?.product_id || 'unknown'; // Caso o ID do produto não esteja disponível
+        // Obter a extensão do arquivo original
+        const fileExtension = path.extname(file.originalname).toLowerCase();
 
-            // Obter o nome original do arquivo
-            const originalFileName = file.originalname.replace(/\s+/g, '_'); // Substituir espaços por underscores para evitar problemas
+        // Nome final do arquivo (UUID + extensão)
+        const fileName = `${uniqueFileName}${fileExtension}`;
 
-            // Gerar o nome do arquivo
-            const fileName = `${userId}-${productId}-${currentDateTime}-${originalFileName}`;
-
-            Logmessage(`Nome do arquivo gerado: ${fileName}`);
-
-            cb(null, fileName); // Nome do arquivo salvo
-        } catch (error) {
-            Logmessage('Erro ao gerar o nome do arquivo', error);
-            return cb(new Error('Erro ao gerar o nome do arquivo'), null);
-        }
+        cb(null, fileName); // Nome do arquivo salvo
     }
 });
-
 
 const upload = multer({ storage: storage });
 
