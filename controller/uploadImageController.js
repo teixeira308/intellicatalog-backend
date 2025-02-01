@@ -124,8 +124,8 @@ const UploadFile = async (req, res) => {
             const originalFilePath = path.join('uploads', nomearquivo);
             const convertedFilePath = originalFilePath.replace('.heif', '.jpg').replace('.heic', '.jpg');
 
-            // Converter a imagem HEIF para JPG usando heif-convert
-            execSync(`heif-convert ${originalFilePath} ${convertedFilePath}`);
+            // Converter a imagem HEIF para JPEG usando ImageMagick
+            execSync(`convert ${originalFilePath} ${convertedFilePath}`);
             Logmessage(`Imagem HEIF convertida para JPEG: ${convertedFilePath}`);
 
             // Substituir o arquivo original pelo convertido
