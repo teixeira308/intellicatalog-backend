@@ -251,7 +251,7 @@ const deleteProductImageById = async (req, res) => {
         // Retornar uma resposta de sucesso
         res.status(200).json({ message: 'Imagem excluída com sucesso', id: product_image_id });
     } catch (error) {
-        console.error('Erro ao excluir o template do banco de dados:', error);
+        console.error('Erro ao excluir o template do banco de dados:', error);a
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
 };
