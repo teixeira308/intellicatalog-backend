@@ -6,6 +6,9 @@ const PizZip = require("pizzip");
 const Docxtemplater = require("docxtemplater");
 const path = require('path');
 
+const { v4: uuidv4 } = require('uuid'); // Importando a função para gerar UUID
+
+
 const { Logmessage } = require("../helper/Tools");
 
 const dotenv = require('dotenv');
@@ -29,30 +32,27 @@ const getStoreImageByUserId = async (req, res) => {
     }
 }
 
+
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, 'uploads/'); // Diretório onde os arquivos serão salvos
     },
     filename: function (req, file, cb) {
-        Logmessage("Upload imagem store: " + req.user.userId + " - store_id : " + req.params.store_id)
+        Logmessage("Upload imagem store: " + req.user.userId + " - store_id : " + req.params.store_id);
 
+        // Gerar um UUID para o nome do arquivo
+        const uniqueFileName = uuidv4(); 
 
-        // Obter a data e hora atual
-        const currentDateTime = new Date().toISOString().replace(/[-:]/g, '').replace('T', '').replace(/\..+/, '');
+        // Obter a extensão do arquivo original
+        const fileExtension = path.extname(file.originalname).toLowerCase();
 
-        // Obter o ID do usuário
-        const userid = req.user.userId; // Supondo que o ID do usuário está disponível na requisição
-
-        // Obter o nome do arquivo original
-        const originalFileName = file.originalname;
-        const { store_id } = req.params;
-
-        // Gerar o nome do arquivo usando a data e hora atual, o ID do usuário e o nome do arquivo original
-        const fileName = `${userid}-${store_id}-${currentDateTime}-${originalFileName}`;
+        // Nome final do arquivo (UUID + extensão)
+        const fileName = `${uniqueFileName}${fileExtension}`;
 
         cb(null, fileName); // Nome do arquivo salvo
     }
 });
+
 
 const upload = multer({ storage: storage });
 
