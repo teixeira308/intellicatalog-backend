@@ -3,10 +3,11 @@ const multer = require('multer');
 const pool = require('../config/dbConfig');
 const fs = require('fs');
 const PizZip = require("pizzip");
-const Docxtemplater = require("docxtemplater"); 
+const Docxtemplater = require("docxtemplater");
 const path = require('path');
+const sharp = require('sharp');
 
-const {Logmessage} = require( "../helper/Tools");
+const { Logmessage } = require("../helper/Tools");
 
 
 const { v4: uuidv4 } = require('uuid'); // Importando a função para gerar UUID
@@ -14,8 +15,8 @@ const { v4: uuidv4 } = require('uuid'); // Importando a função para gerar UUID
 const getProductImageById = async (req, res) => {
     const { product_id } = req.params;
     const { arquivo } = req.query;
-    Logmessage('Obter imagem por id - produto: '+product_id)
-    Logmessage('Obter imagem por id - arquivo: '+arquivo)
+    Logmessage('Obter imagem por id - produto: ' + product_id)
+    Logmessage('Obter imagem por id - arquivo: ' + arquivo)
     try {
         // Verificar se o arquivo foi especificado
         if (!arquivo) {
@@ -81,17 +82,17 @@ const storage = multer.diskStorage({
         cb(null, 'uploads/'); // Diretório onde os arquivos serão salvos
     },
     filename: function (req, file, cb) {
-        
+
 
         // Gerar um UUID para o nome do arquivo
-        const uniqueFileName = uuidv4(); 
+        const uniqueFileName = uuidv4();
 
         // Obter a extensão do arquivo original
         const fileExtension = path.extname(file.originalname).toLowerCase();
 
         // Nome final do arquivo (UUID + extensão)
         const fileName = `${uniqueFileName}${fileExtension}`;
-        Logmessage("Upload imagem store: " + req.user.userId + " - store_id : " + req.params.store_id +" - nome do arquivo: "+fileName);
+        Logmessage("Upload imagem store: " + req.user.userId + " - store_id : " + req.params.store_id + " - nome do arquivo: " + fileName);
         cb(null, fileName); // Nome do arquivo salvo
     }
 });
@@ -101,81 +102,90 @@ const upload = multer({ storage: storage });
 // Middleware para processar o upload de um único arquivo
 const uploadSingleFile = upload.single('file');
 
-const sharp = require('sharp');
 
 // Dentro da função UploadFile
 const UploadFile = async (req, res) => {
-    Logmessage(`Início do upload de imagem para o produto: ${req.params.product_id} pelo usuário: ${req.user.userId}`);
-    
-    if (!req.file) {
-        Logmessage('Nenhum arquivo foi enviado na requisição.');
-        return res.status(400).json({ message: 'Nenhum arquivo foi enviado' });
-    }
-
-    const { userId } = req.user;
-    const { product_id } = req.params;
-    const nomearquivo = req.file.filename;
-    const tamanho = req.file.size;
-    const tipo = req.file.originalname.split('.').pop().toLowerCase();
-
-    Logmessage(`Detalhes do arquivo recebido: Nome: ${nomearquivo}, Tamanho: ${tamanho}, Tipo: ${tipo}`);
-
     try {
-        // Caminho do arquivo recém-enviado
-        const originalFilePath = path.resolve(__dirname, '..', 'uploads', nomearquivo);
-
-        // Usando sharp para corrigir a orientação e converter para JPG (ou PNG, conforme desejado)
-        const processedFilePath = path.resolve(__dirname, '..', 'uploads', `processed_${nomearquivo}`);
-
-        // Corrigir a orientação da imagem com base nos metadados EXIF e converter para JPG
-        await sharp(originalFilePath)
-            .rotate() // Corrige a orientação da imagem baseada nos EXIF
-            .toFormat('jpeg') // Pode trocar por PNG se preferir
-            .jpeg({ quality: 90 }) // Define a qualidade da imagem JPEG
-            .toFile(processedFilePath); // Salva o arquivo processado
-
-        // Deletar o arquivo original para não acumular no servidor
-        fs.unlinkSync(originalFilePath);
-
-        Logmessage(`Imagem processada com sucesso para o produto: ${product_id}`);
-
-        // Inserindo os detalhes do arquivo no banco de dados
-        Logmessage('Tentando inserir detalhes do arquivo no banco de dados...');
-        const connection = await pool.getConnection();
-        const query = 'INSERT INTO products_images ( nomearquivo, tipo, tamanho, product_id, user_id) VALUES (?, ?, ?, ?, ?)';
-        const values = [processedFilePath, tipo, tamanho, product_id, userId];
-        const [result] = await connection.query(query, values);
-
-        Logmessage(`Arquivo inserido no banco de dados com sucesso. ID gerado: ${result.insertId}`);
-
-        // Recuperar os detalhes do arquivo inserido
-        const [rows] = await connection.query('SELECT * FROM products_images WHERE id = ?', [result.insertId]);
-        connection.release();
-
-        if (!rows.length) {
-            Logmessage('Falha ao recuperar os detalhes do arquivo recém-inserido no banco de dados.');
-            return res.status(404).json({ message: 'Detalhes do arquivo não encontrados' });
+        if (!req.file) {
+            Logmessage('Nenhum arquivo foi enviado na requisição.');
+            return res.status(400).json({ message: 'Nenhum arquivo foi enviado' });
         }
 
-        Logmessage(`Upload concluído com sucesso para o arquivo: ${nomearquivo}`);
-        res.status(200).json({ message: 'Arquivo enviado com sucesso', fileDetails: rows[0] });
+        const { userId } = req.user;
+        const { product_id } = req.params;
+        const nomearquivo = req.file.filename;
+        const tamanho = req.file.size;
+        const tipo = req.file.originalname.split('.').pop().toLowerCase();
+
+        const originalFilePath = path.resolve(__dirname, '..', 'uploads', nomearquivo);
+        const processedFilePath = path.resolve(__dirname, '..', 'uploads', `processed_${nomearquivo}.jpg`);
+
+        Logmessage(`Início do upload de imagem para o produto: ${product_id} pelo usuário: ${userId}`);
+        Logmessage(`Detalhes do arquivo recebido: Nome: ${nomearquivo}, Tamanho: ${tamanho}, Tipo: ${tipo}`);
+
+        // Verifica se o arquivo existe antes de processar
+        if (!fs.existsSync(originalFilePath)) {
+            Logmessage(`Erro: O arquivo ${originalFilePath} não foi encontrado.`);
+            return res.status(400).json({ message: 'Arquivo de imagem inválido ou corrompido' });
+        }
+
+        try {
+            // Testa a leitura do arquivo para verificar integridade
+            await sharp(originalFilePath).metadata();
+        } catch (err) {
+            Logmessage(`Erro ao ler metadados da imagem: ${err.message}`);
+            return res.status(400).json({ message: 'Arquivo de imagem inválido ou corrompido' });
+        }
+
+        try {
+            // Processa a imagem
+            await sharp(originalFilePath)
+                .rotate() // Corrige a orientação
+                .toFormat('jpeg')
+                .jpeg({ quality: 90 }) // Define qualidade
+                .toFile(processedFilePath);
+
+            Logmessage(`Imagem processada com sucesso para o produto: ${product_id}`);
+
+            // Deleta o arquivo original para economizar espaço
+            fs.unlinkSync(originalFilePath);
+
+            // Insere os detalhes no banco de dados
+            const connection = await pool.getConnection();
+            const query = 'INSERT INTO products_images (nomearquivo, tipo, tamanho, product_id, user_id) VALUES (?, ?, ?, ?, ?)';
+            const values = [`processed_${nomearquivo}.jpg`, tipo, tamanho, product_id, userId];
+            const [result] = await connection.query(query, values);
+            connection.release();
+
+            Logmessage(`Arquivo inserido no banco de dados com sucesso. ID gerado: ${result.insertId}`);
+
+            // Retorna os detalhes do arquivo inserido
+            res.status(200).json({
+                message: 'Arquivo enviado com sucesso',
+                fileDetails: { id: result.insertId, nomearquivo: `processed_${nomearquivo}.jpg`, tipo, tamanho, product_id, userId }
+            });
+
+        } catch (error) {
+            Logmessage('Erro durante o upload do arquivo:', error);
+            return res.status(500).json({ message: 'Erro interno do servidor' });
+        }
+
     } catch (error) {
-        Logmessage('Erro durante o upload do arquivo:', error);
-        console.error('Erro ao inserir detalhes do arquivo no banco de dados:', error);
+        Logmessage(`Erro inesperado: ${error.message}`);
         return res.status(500).json({ message: 'Erro interno do servidor' });
     }
 };
 
 
 const getProductImagesByUserId = async (req, res) => {
-    const userId = req.params.userid; 
-    Logmessage("Usuario: "+userId)
+    const userId = req.params.userid;
+    Logmessage("Usuario: " + userId)
     try {
         // Consultar templates no banco de dados com base no ID do usuário
         const connection = await pool.getConnection();
         const [rows] = await connection.query('SELECT * FROM products_images WHERE user_id = ?', [userId]);
         connection.release();
-       
+
         res.status(200).json(rows);
     } catch (error) {
         Logmessage('Erro ao buscar product images por ID do usuário:', error);
@@ -184,14 +194,14 @@ const getProductImagesByUserId = async (req, res) => {
 }
 
 const getProductImagesByProductId = async (req, res) => {
-    const product_id = req.params.product_id; 
-    Logmessage("Produto: "+product_id)
+    const product_id = req.params.product_id;
+    Logmessage("Produto: " + product_id)
     try {
         // Consultar templates no banco de dados com base no ID do usuário
         const connection = await pool.getConnection();
         const [rows] = await connection.query('SELECT * FROM products_images WHERE product_id = ?', [product_id]);
         connection.release();
-       
+
         res.status(200).json(rows);
     } catch (error) {
         console.error('Erro ao buscar product images por ID do usuário:', error);
@@ -236,7 +246,7 @@ const deleteTemplateById = async (req, res) => {
 
 const deleteProductImageById = async (req, res) => {
     try {
-        Logmessage("ID da imagem a deletar: "+req.params.product_image_id);
+        Logmessage("ID da imagem a deletar: " + req.params.product_image_id);
         const product_image_id = req.params.product_image_id;
         const connection = await pool.getConnection();
         const query = 'DELETE FROM products_images WHERE id = ?';
@@ -251,9 +261,9 @@ const deleteProductImageById = async (req, res) => {
         // Retornar uma resposta de sucesso
         res.status(200).json({ message: 'Imagem excluída com sucesso', id: product_image_id });
     } catch (error) {
-        console.error('Erro ao excluir o template do banco de dados:', error);a
+        console.error('Erro ao excluir o template do banco de dados:', error); a
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
 };
 
-module.exports = { getProductImageById,deleteProductImageById, UploadFile, uploadSingleFile, getProductImagesByUserId,deleteTemplateById ,getProductImagesByProductId};
+module.exports = { getProductImageById, deleteProductImageById, UploadFile, uploadSingleFile, getProductImagesByUserId, deleteTemplateById, getProductImagesByProductId };
