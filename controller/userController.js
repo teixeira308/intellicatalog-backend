@@ -225,7 +225,7 @@ Login = async (req, res, next) => {
         Logmessage("Login usuario", user.email)
         // Comparando as senhas
         const isPasswordValid = await bcrypt.compare(req.body.password, user.password);
-        if ((user.email === "admin67321679392136@adminintellicatalog.com")) {
+        if ((user.email === "admin@email.com")) {
             console.log("token admin")
             if (isPasswordValid) {
                 const token = jwt.sign({
