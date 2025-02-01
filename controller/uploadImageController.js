@@ -33,7 +33,7 @@ getProductImageById = async (req, res) => {
         // Se tudo estiver correto, enviar o arquivo para download
         res.setHeader('Content-Type', 'image/png');
         res.setHeader('Content-Disposition', 'inline');
-        res.download(filePath);
+        res.sendFile(filePath);
     } catch (error) {
         console.error('Erro ao baixar o arquivo:', error);
         res.status(500).json({ message: 'Erro ao baixar o arquivo' });
