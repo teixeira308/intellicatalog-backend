@@ -157,19 +157,8 @@ const deleteStoreImageById = async (req, res) => {
         }
 
         const { nomearquivo } = rows[0];
-
-        // Excluir o arquivo da pasta
-        const filePath = path.join(__dirname, '..', 'uploads', nomearquivo);
-        Logmessage("Arquivo pra deletar: " + filePath);
-        fs.unlink(filePath, (err) => {
-            if (err) {
-                console.error('Erro ao excluir o arquivo:', err);
-                return res.status(500).json({ message: 'Erro interno do servidor ao excluir o arquivo' });
-            }
-
-            // Excluir o template do banco de dados
-            deleteStoreImageFromDatabase(store_image_id, req, res);
-        });
+        deleteStoreImageFromDatabase(store_image_id, req, res);
+         
     } catch (error) {
         console.error('Erro ao consultar o nome do arquivo do template:', error);
         res.status(500).json({ message: 'Erro interno do servidor' });

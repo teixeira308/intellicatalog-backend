@@ -201,39 +201,7 @@
         }
     }
 
-    const deleteTemplateById = async (req, res) => {
-        const templateId = req.params.id;
-
-        try {
-            // Consultar o nome do arquivo do template no banco de dados
-            const connection = await pool.getConnection();
-            const query = 'SELECT nomearquivo FROM templates WHERE id = ?';
-            const [rows] = await connection.query(query, [templateId]);
-            connection.release();
-
-            if (!rows.length) {
-                return res.status(404).json({ message: 'Template não encontrado' });
-            }
-
-            const { nomearquivo } = rows[0];
-
-            // Excluir o arquivo da pasta
-            const filePath = path.join(__dirname, '..', 'uploads', nomearquivo);
-            Logmessage(filePath);
-            fs.unlink(filePath, (err) => {
-                if (err) {
-                    console.error('Erro ao excluir o arquivo:', err);
-                    return res.status(500).json({ message: 'Erro interno do servidor ao excluir o arquivo' });
-                }
-
-                // Excluir o template do banco de dados
-                deleteTemplateFromDatabase(templateId, res);
-            });
-        } catch (error) {
-            console.error('Erro ao consultar o nome do arquivo do template:', error);
-            res.status(500).json({ message: 'Erro interno do servidor' });
-        }
-    };
+     
 
 
     const deleteProductImageById = async (req, res) => {
@@ -243,7 +211,7 @@
             const connection = await pool.getConnection();
             const query = 'DELETE FROM products_images WHERE id = ?';
             const [result] = await connection.query(query, product_image_id);
-            connection.release();const express = require('express');
+            connection.release(); 
 
             // Verificar se o template foi excluído com sucesso
             if (result.affectedRows === 0) {
@@ -258,4 +226,4 @@
         }
     };
 
-    module.exports = { getProductImageById,deleteProductImageById, UploadFile, uploadSingleFile, getProductImagesByUserId,deleteTemplateById ,getProductImagesByProductId};
+    module.exports = { getProductImageById,deleteProductImageById, UploadFile, uploadSingleFile, getProductImagesByUserId ,getProductImagesByProductId};

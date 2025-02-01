@@ -21,7 +21,6 @@ router.get('/stores/:store_id/store_images', login.required, uploadStoreImageCon
 
 router.get('/stores/:store_id/store_images/download', login.required, uploadStoreImageController.getStoreImageDownload);
 
-
 router.get('/stores/:store_id/store_images/:store_image_id', login.required, uploadStoreImageController.getStoreImagesByStoreId);
 
 router.delete('/stores/:store_id/store_images/:store_image_id', login.required, uploadStoreImageController.deleteStoreImageById);
