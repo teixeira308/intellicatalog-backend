@@ -132,14 +132,22 @@ const UploadFile = async (req, res) => {
         try {
             Logmessage('Iniciando o processamento da imagem...');
 
-            // Processa a imagem com Sharp
-            await sharp(originalFilePath)
-                .rotate() // Corrige a orientação
-                .toFormat('jpeg')
-                .jpeg({ quality: 90 })
-                .withMetadata({}) // Remove metadados EXIF
-                .toFile(processedFilePath);
-
+            const metadata = await sharp(originalFilePath).metadata();
+            Logmessage(`Formato detectado: ${metadata.format}`);
+            
+            if (metadata.format === 'heic' || metadata.format === 'heif') {
+                Logmessage('Convertendo HEIC para JPEG...');
+                await sharp(originalFilePath)
+                    .toFormat('jpeg')
+                    .jpeg({ quality: 90 })
+                    .toFile(processedFilePath);
+            } else {
+                await sharp(originalFilePath)
+                    .rotate()
+                    .toFormat('jpeg')
+                    .jpeg({ quality: 90 })
+                    .toFile(processedFilePath);
+            }
             Logmessage(`Imagem processada com sucesso: ${processedFilePath}`);
 
             // Deleta o arquivo original
