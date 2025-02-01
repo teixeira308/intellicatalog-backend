@@ -6,6 +6,9 @@ const PizZip = require("pizzip");
 const Docxtemplater = require("docxtemplater"); 
 const path = require('path');
 
+//heif-convert
+const { execSync } = require('child_process');
+
 const {Logmessage} = require( "../helper/Tools");
 
 const getProductImageById = async (req, res) => {
@@ -101,13 +104,12 @@ const uploadSingleFile = upload.single('file');
 
 const UploadFile = async (req, res) => {
     Logmessage(`Início do upload de imagem para o produto: ${req.params.product_id} pelo usuário: ${req.user.userId}`);
-    
+
     if (!req.file) {
         Logmessage('Nenhum arquivo foi enviado na requisição.');
         return res.status(400).json({ message: 'Nenhum arquivo foi enviado' });
     }
 
-    
     const { userId } = req.user;
     const { product_id } = req.params;
     const nomearquivo = req.file.filename;
@@ -117,7 +119,21 @@ const UploadFile = async (req, res) => {
     Logmessage(`Detalhes do arquivo recebido: Nome: ${nomearquivo}, Tamanho: ${tamanho}, Tipo: ${tipo}`);
 
     try {
-        // Inserindo os detalhes do arquivo no banco de dados
+        // Verificar se a imagem é HEIF (ou HEIC) e realizar a conversão
+        if (tipo === 'heif' || tipo === 'heic') {
+            const originalFilePath = path.join('uploads', nomearquivo);
+            const convertedFilePath = originalFilePath.replace('.heif', '.jpg').replace('.heic', '.jpg');
+
+            // Converter a imagem HEIF para JPG usando heif-convert
+            execSync(`heif-convert ${originalFilePath} ${convertedFilePath}`);
+            Logmessage(`Imagem HEIF convertida para JPEG: ${convertedFilePath}`);
+
+            // Substituir o arquivo original pelo convertido
+            fs.renameSync(convertedFilePath, originalFilePath); // Sobrescrever o arquivo original
+            req.file.filename = nomearquivo; // Atualizar o nome do arquivo no objeto `req.file`
+        }
+
+        // Inserir os detalhes do arquivo no banco de dados
         Logmessage('Tentando inserir detalhes do arquivo no banco de dados...');
         const connection = await pool.getConnection();
         const query = 'INSERT INTO products_images ( nomearquivo, tipo, tamanho, product_id, user_id) VALUES (?, ?, ?, ?, ?)';
@@ -143,7 +159,6 @@ const UploadFile = async (req, res) => {
         return res.status(500).json({ message: 'Erro interno do servidor' });
     }
 };
-
 const getProductImagesByUserId = async (req, res) => {
     const userId = req.params.userid; 
     try {
