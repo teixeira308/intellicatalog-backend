@@ -8,7 +8,7 @@ const path = require('path');
 
 const {Logmessage} = require( "../helper/Tools");
 
-getProductImageById = async (req, res) => {
+const getProductImageById = async (req, res) => {
     const { product_id } = req.params; // Acessar o parâmetro de caminho
     const { arquivo } = req.query; // Acessar o parâmetro de consulta
 
@@ -32,7 +32,6 @@ getProductImageById = async (req, res) => {
 
         // Se tudo estiver correto, enviar o arquivo para download
         res.setHeader('Content-Type', 'image/png');
-        res.setHeader('Content-Disposition', 'inline');
         res.sendFile(filePath);
     } catch (error) {
         console.error('Erro ao baixar o arquivo:', error);
