@@ -102,8 +102,8 @@ const upload = multer({ storage: storage });
 // Middleware para processar o upload de um único arquivo
 const uploadSingleFile = upload.single('file');
 
+ 
 
-// Dentro da função UploadFile
 const UploadFile = async (req, res) => {
     try {
         if (!req.file) {
@@ -130,20 +130,28 @@ const UploadFile = async (req, res) => {
         }
 
         try {
-            // Processa a imagem e remove metadados
+            Logmessage('Iniciando o processamento da imagem...');
+
+            // Processa a imagem com Sharp
             await sharp(originalFilePath)
                 .rotate() // Corrige a orientação
                 .toFormat('jpeg')
                 .jpeg({ quality: 90 })
-                .withMetadata({}) // REMOVE OS METADADOS EXIF
+                .withMetadata({}) // Remove metadados EXIF
                 .toFile(processedFilePath);
 
-            Logmessage(`Imagem processada e metadados removidos com sucesso para o produto: ${product_id}`);
+            Logmessage(`Imagem processada com sucesso: ${processedFilePath}`);
 
-            // Deleta o arquivo original para economizar espaço
-            fs.unlinkSync(originalFilePath);
+            // Deleta o arquivo original
+            try {
+                fs.unlinkSync(originalFilePath);
+                Logmessage(`Arquivo original deletado: ${originalFilePath}`);
+            } catch (err) {
+                Logmessage(`Erro ao deletar o arquivo original: ${err.message}`);
+            }
 
             // Insere os detalhes no banco de dados
+            Logmessage('Tentando inserir detalhes no banco de dados...');
             const connection = await pool.getConnection();
             const query = 'INSERT INTO products_images (nomearquivo, tipo, tamanho, product_id, user_id) VALUES (?, ?, ?, ?, ?)';
             const values = [`processed_${nomearquivo}.jpg`, tipo, tamanho, product_id, userId];
@@ -153,23 +161,23 @@ const UploadFile = async (req, res) => {
             Logmessage(`Arquivo inserido no banco de dados com sucesso. ID gerado: ${result.insertId}`);
 
             // Retorna os detalhes do arquivo inserido
-            res.status(200).json({
+            return res.status(200).json({
                 message: 'Arquivo enviado com sucesso',
                 fileDetails: { id: result.insertId, nomearquivo: `processed_${nomearquivo}.jpg`, tipo, tamanho, product_id, userId }
             });
 
         } catch (error) {
-            Logmessage('Erro durante o upload do arquivo:', error);
-            return res.status(500).json({ message: 'Erro interno do servidor' });
+            Logmessage(`Erro ao processar imagem: ${error.message}`);
+            return res.status(500).json({ message: 'Erro ao processar imagem', error: error.message });
         }
 
     } catch (error) {
         Logmessage(`Erro inesperado: ${error.message}`);
-        return res.status(500).json({ message: 'Erro interno do servidor' });
+        return res.status(500).json({ message: 'Erro interno do servidor', error: error.message });
     }
 };
+ 
 
-module.exports = { UploadFile };
 
 
 
