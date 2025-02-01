@@ -7,7 +7,7 @@ const Docxtemplater = require("docxtemplater");
 const path = require('path');
 
 //heif-convert
-const { execSync } = require('child_process');
+const sizeOf = require('image-size');
 
 const {Logmessage} = require( "../helper/Tools");
 
@@ -112,32 +112,41 @@ const UploadFile = async (req, res) => {
 
     const { userId } = req.user;
     const { product_id } = req.params;
-    const nomearquivo = req.file.filename;
+    let nomearquivo = req.file.filename;
     const tamanho = req.file.size;
-    const tipo = req.file.originalname.split('.').pop().toLowerCase();
+    let tipo = req.file.originalname.split('.').pop().toLowerCase();
 
     Logmessage(`Detalhes do arquivo recebido: Nome: ${nomearquivo}, Tamanho: ${tamanho}, Tipo: ${tipo}`);
 
     try {
-        // Verificar se a imagem é HEIF (ou HEIC) e realizar a conversão
-        if (tipo === 'heif' || tipo === 'heic') {
-            const originalFilePath = path.join('uploads', nomearquivo);
-            const convertedFilePath = originalFilePath.replace('.heif', '.jpg').replace('.heic', '.jpg');
+        // Verificar o tipo real da imagem usando image-size
+        const filePath = path.join('uploads', nomearquivo);
+        const dimensions = sizeOf(filePath);  // Tenta pegar o tipo real da imagem
 
-            // Converter a imagem HEIF para JPEG usando ImageMagick
-            execSync(`convert ${originalFilePath} ${convertedFilePath}`);
+        if (!dimensions) {
+            return res.status(400).json({ message: 'Imagem inválida' });
+        }
+
+        tipo = dimensions.type;  // Agora tipo será 'jpg', 'heif', etc.
+
+        Logmessage(`Tipo da imagem detectado: ${tipo}`);
+
+        // Caso a imagem seja HEIF ou HEIC, realizar conversão
+        if (tipo === 'heif' || tipo === 'heic') {
+            const convertedFilePath = filePath.replace('.heif', '.jpg').replace('.heic', '.jpg');
+            execSync(`convert ${filePath} ${convertedFilePath}`);
             Logmessage(`Imagem HEIF convertida para JPEG: ${convertedFilePath}`);
 
-            // Substituir o arquivo original pelo convertido
-            fs.renameSync(convertedFilePath, originalFilePath); // Sobrescrever o arquivo original
-            req.file.filename = nomearquivo; // Atualizar o nome do arquivo no objeto `req.file`
+            fs.renameSync(convertedFilePath, filePath);  // Substituir o arquivo original com o convertido
+            nomearquivo = nomearquivo.replace('.heif', '.jpg').replace('.heic', '.jpg');  // Atualizar o nome do arquivo
+            tipo = 'jpeg';  // Atualizar o tipo para 'jpeg' após conversão
         }
 
         // Inserir os detalhes do arquivo no banco de dados
         Logmessage('Tentando inserir detalhes do arquivo no banco de dados...');
         const connection = await pool.getConnection();
         const query = 'INSERT INTO products_images ( nomearquivo, tipo, tamanho, product_id, user_id) VALUES (?, ?, ?, ?, ?)';
-        const values = [ nomearquivo, tipo, tamanho, product_id, userId];
+        const values = [nomearquivo, tipo, tamanho, product_id, userId];
         const [result] = await connection.query(query, values);
 
         Logmessage(`Arquivo inserido no banco de dados com sucesso. ID gerado: ${result.insertId}`);
@@ -159,6 +168,8 @@ const UploadFile = async (req, res) => {
         return res.status(500).json({ message: 'Erro interno do servidor' });
     }
 };
+
+
 const getProductImagesByUserId = async (req, res) => {
     const userId = req.params.userid; 
     try {
