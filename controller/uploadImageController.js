@@ -7,8 +7,8 @@
     const path = require('path');
 
     //heif-convert
+    const sizeOf = require('image-size');
     const { execSync } = require('child_process');
-
 
     const {Logmessage} = require( "../helper/Tools");
 
