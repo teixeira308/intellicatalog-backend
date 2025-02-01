@@ -129,14 +129,7 @@ const UploadFile = async (req, res) => {
             return res.status(400).json({ message: 'Arquivo de imagem inválido ou corrompido' });
         }
 
-        try {
-            Logmessage('entrou pro sharp funcionar')
-            // Testa a leitura do arquivo para verificar integridade
-            await sharp(originalFilePath).metadata();
-        } catch (err) {
-            Logmessage(`Erro ao ler metadados da imagem: ${err.message}`);
-            return res.status(400).json({ message: 'Arquivo de imagem inválido ou corrompido' });
-        }
+       
 
         try {
             // Processa a imagem
