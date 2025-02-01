@@ -11,9 +11,12 @@ Logmessage = async (message) => {
         // Log de sistema no console
         console.log(formattedDate, "->", message);
 
+        const messageString = typeof message === "object" ? JSON.stringify(message) : message;
+
+
         // Inserindo no banco de dados
         const connection = await pool.getConnection();
-        await connection.query("INSERT INTO logs (message, createdAt) VALUES (?, ?)", [message, formattedDate]);
+        await connection.query("INSERT INTO logs (message, createdAt) VALUES (?, ?)", [messageString, formattedDate]);
         connection.release();
     } catch (error) {
         console.error("Erro ao salvar log no banco de dados:", error);
