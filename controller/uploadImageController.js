@@ -97,6 +97,9 @@ const upload = multer({ storage: storage });
 // Middleware para processar o upload de um único arquivo
 const uploadSingleFile = upload.single('file');
 
+const sharp = require('sharp');
+
+// Dentro da função UploadFile
 const UploadFile = async (req, res) => {
     Logmessage(`Início do upload de imagem para o produto: ${req.params.product_id} pelo usuário: ${req.user.userId}`);
     
@@ -105,7 +108,6 @@ const UploadFile = async (req, res) => {
         return res.status(400).json({ message: 'Nenhum arquivo foi enviado' });
     }
 
-    
     const { userId } = req.user;
     const { product_id } = req.params;
     const nomearquivo = req.file.filename;
@@ -115,11 +117,29 @@ const UploadFile = async (req, res) => {
     Logmessage(`Detalhes do arquivo recebido: Nome: ${nomearquivo}, Tamanho: ${tamanho}, Tipo: ${tipo}`);
 
     try {
+        // Caminho do arquivo recém-enviado
+        const originalFilePath = path.resolve(__dirname, '..', 'uploads', nomearquivo);
+
+        // Usando sharp para corrigir a orientação e converter para JPG (ou PNG, conforme desejado)
+        const processedFilePath = path.resolve(__dirname, '..', 'uploads', `processed_${nomearquivo}`);
+
+        // Corrigir a orientação da imagem com base nos metadados EXIF e converter para JPG
+        await sharp(originalFilePath)
+            .rotate() // Corrige a orientação da imagem baseada nos EXIF
+            .toFormat('jpeg') // Pode trocar por PNG se preferir
+            .jpeg({ quality: 90 }) // Define a qualidade da imagem JPEG
+            .toFile(processedFilePath); // Salva o arquivo processado
+
+        // Deletar o arquivo original para não acumular no servidor
+        fs.unlinkSync(originalFilePath);
+
+        Logmessage(`Imagem processada com sucesso para o produto: ${product_id}`);
+
         // Inserindo os detalhes do arquivo no banco de dados
         Logmessage('Tentando inserir detalhes do arquivo no banco de dados...');
         const connection = await pool.getConnection();
         const query = 'INSERT INTO products_images ( nomearquivo, tipo, tamanho, product_id, user_id) VALUES (?, ?, ?, ?, ?)';
-        const values = [ nomearquivo, tipo, tamanho, product_id, userId];
+        const values = [processedFilePath, tipo, tamanho, product_id, userId];
         const [result] = await connection.query(query, values);
 
         Logmessage(`Arquivo inserido no banco de dados com sucesso. ID gerado: ${result.insertId}`);
@@ -141,6 +161,7 @@ const UploadFile = async (req, res) => {
         return res.status(500).json({ message: 'Erro interno do servidor' });
     }
 };
+
 
 const getProductImagesByUserId = async (req, res) => {
     const userId = req.params.userid; 
