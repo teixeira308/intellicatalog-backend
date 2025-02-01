@@ -9,35 +9,64 @@ const path = require('path');
 const {Logmessage} = require( "../helper/Tools");
 
 const getProductImageById = async (req, res) => {
-    const { product_id } = req.params; // Acessar o parâmetro de caminho
-    const { arquivo } = req.query; // Acessar o parâmetro de consulta
+    const { product_id } = req.params;
+    const { arquivo } = req.query;
 
     try {
-        
-        // Verificar se o documento existe na pasta de uploads e se pertence ao usuário
-        const filePath = path.join(__dirname, '..', 'uploads', arquivo);
-        console.log(filePath)
-        if (!fs.existsSync(filePath)) {
-            return res.status(404).json({ message: 'Documento não encontrado' });
+        // Verificar se o arquivo foi especificado
+        if (!arquivo) {
+            return res.status(400).json({ message: 'Nome do arquivo não especificado' });
         }
 
-        // Consultar no banco de dados se o usuário possui acesso ao documento
+        // Caminho absoluto do arquivo
+        const filePath = path.resolve(__dirname, '..', 'uploads', arquivo);
+        console.log(`Tentando servir: ${filePath}`);
+
+        // Verificar se o arquivo existe
+        if (!fs.existsSync(filePath)) {
+            return res.status(404).json({ message: 'Arquivo não encontrado' });
+        }
+
+        // Consultar no banco de dados se o usuário tem acesso ao documento
         const connection = await pool.getConnection();
-        const [rows] = await connection.query('SELECT * FROM products_images WHERE product_id = ?  AND nomearquivo = ?', [product_id,arquivo]);
+        const [rows] = await connection.query(
+            'SELECT * FROM products_images WHERE product_id = ? AND nomearquivo = ?',
+            [product_id, arquivo]
+        );
         connection.release();
 
         if (!rows.length) {
             return res.status(403).json({ message: 'Usuário não tem acesso a este documento' });
         }
 
-        // Se tudo estiver correto, enviar o arquivo para download
-        res.setHeader('Content-Type', 'image/png');
+        // Detectar o tipo de arquivo dinamicamente
+        const fileExtension = path.extname(filePath).toLowerCase();
+        let mimeType = 'application/octet-stream'; // Tipo padrão caso não reconheça
+
+        switch (fileExtension) {
+            case '.jpg':
+            case '.jpeg':
+                mimeType = 'image/jpeg';
+                break;
+            case '.png':
+                mimeType = 'image/png';
+                break;
+            case '.webp':
+                mimeType = 'image/webp';
+                break;
+            case '.gif':
+                mimeType = 'image/gif';
+                break;
+        }
+
+        res.setHeader('Content-Type', mimeType);
+        res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache por um dia
         res.sendFile(filePath);
     } catch (error) {
-        console.error('Erro ao baixar o arquivo:', error);
-        res.status(500).json({ message: 'Erro ao baixar o arquivo' });
+        console.error('Erro ao processar a imagem:', error);
+        res.status(500).json({ message: 'Erro interno ao processar a imagem' });
     }
-}
+};
 
 
 // Configuração do Multer para salvar os arquivos no disco
