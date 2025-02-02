@@ -56,43 +56,26 @@ const GetAllServices = async (req, res) => {
 const UpdateService = async (req, res) => {
     const { id } = req.params; // ID do serviço
     const updates = req.body; // Dados a serem atualizados
-    Logmessage(updates);
+
+    Logmessage('Dados para atualização:', updates);
+
     try {
         const connection = await pool.getConnection();
 
-        // Verificar se o serviço existe
-        const [existingService] = await connection.query('SELECT * FROM services WHERE id = ?', [id]);
-
-        if (existingService.length === 0) {
-            connection.release();
-            return res.status(404).json({ message: 'UpdateService: Serviço não encontrado' });
-        }
-
-        // Construir query dinamicamente
-        const updateFields = [];
-        const updateValues = [];
-
-        for (const [field, value] of Object.entries(updates)) {
-            updateFields.push(`${field} = ?`);
-            updateValues.push(value);
-        }
-
-        // Se nenhum campo foi informado, retornar erro
-        if (updateFields.length === 0) {
-            connection.release();
-            return res.status(400).json({ message: 'Nenhum campo para atualizar informado' });
-        }
-
-        // Adicionar o ID ao final dos valores
-        updateValues.push(id);
+        // Itera sobre o objeto `updates` para pegar o campo e o valor
+        const [field, value] = Object.entries(updates)[0]; 
 
         // Executar a query de atualização
-        const updateQuery = `UPDATE services SET ${updateFields.join(', ')} WHERE id = ?`;
-        await connection.query(updateQuery, updateValues);
+        const updateQuery = `UPDATE services SET ${field} = ? WHERE id = ?`;
+        const [result] = await connection.query(updateQuery, [value, id]);
 
         connection.release();
 
-        Logmessage('Dados do serviço atualizados no banco de dados:', { id, ...updates });
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Serviço não encontrado ou nada foi alterado' });
+        }
+
+        Logmessage('Dados do serviço atualizados no banco de dados:', { id, field, value });
         res.status(200).json({ message: 'Serviço atualizado com sucesso' });
     } catch (error) {
         Logmessage('Erro ao atualizar serviço no banco de dados: ' + error);
