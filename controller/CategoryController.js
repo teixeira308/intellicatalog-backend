@@ -104,53 +104,54 @@ deleteCategory = async (req, res) => {
 
 
 getCategory = async (req, res) => {
-    const { id } = req.params; // Captura o ID da categoria da URL
-    const mode = req.query.mode; // Captura o mode como string
-
-    Logmessage("Consulta Categoria: " + id + " | Modo: " + (mode === "backoffice" ? "Backoffice" : "Padrão"));
-
+    const { id } = req.params; // Captura o ID da pessoa da URL
+    const mode = parseInt(req.query.mode) 
+    Logmessage("Consulta Categoria: "+id)
     try {
         const connection = await pool.getConnection();
-
-        // Define a query com ou sem o filtro de status
-        const query = mode === "backoffice"
-            ? 'SELECT * FROM categories WHERE id = ?' // Se mode=backoffice, não filtra por status
-            : 'SELECT * FROM categories WHERE status="ativo" AND id = ?'; // Se não, mantém o filtro status="ativo"
-
-        const [category] = await connection.query(query, [id]); // Executa a query com o ID passado
+        const [category] = await connection.query('SELECT * FROM categories WHERE status="ativo" and id = ?', id); // Consulta uma pessoa com base no ID
         connection.release();
 
-        if (category.length === 0) { // Se não houver categoria com o ID especificado, retorna 404
+        if (category.length === 0) { // Se não houver pessoa com o ID especificado, retorna 404
             return res.status(404).json({ message: 'Category não encontrada' });
         }
 
-        Logmessage('Category recuperada do banco de dados: ' + JSON.stringify(category));
+        Logmessage('Category recuperada do banco de dados:'+ JSON.stringify(category));
 
-        // Retorna a categoria encontrada
+        // Retorna a pessoa encontrada
         res.status(200).json(category[0]);
     } catch (error) {
-        Logmessage('Erro ao recuperar a Category do banco de dados: ' + error);
+        Logmessage('Erro ao recuperar a Category do banco de dados:'+ error);
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
-};
-
-
+}
 simpleListAllCategories = async (req, res) => {
     const page = parseInt(req.query.page) || 1; // Página atual (padrão: 1)
     const pageSize = parseInt(req.query.pageSize) || 10; // Tamanho da página (padrão: 10)
     const { user_id } = req.params;
+    const mode = req.query.mode; // Captura o mode
 
     try {
         const connection = await pool.getConnection();
-        const [totalCount] = await connection.query('SELECT COUNT(*) as total FROM categories where status="ativo" and user_id = ? ',user_id);
 
+        // Define a query de contagem conforme o modo
+        const countQuery = mode === "backoffice"
+            ? 'SELECT COUNT(*) as total FROM categories WHERE user_id = ?'
+            : 'SELECT COUNT(*) as total FROM categories WHERE status="ativo" AND user_id = ?';
+
+        const [totalCount] = await connection.query(countQuery, [user_id]);
         const offset = (page - 1) * pageSize;
         const totalPages = Math.ceil(totalCount[0].total / pageSize);
 
-        const [results] = await connection.query('SELECT * FROM categories where status="ativo" and user_id = ? order by catalog_order asc LIMIT ?, ?', [user_id,offset, pageSize]);
+        // Define a query principal conforme o modo
+        const dataQuery = mode === "backoffice"
+            ? 'SELECT * FROM categories WHERE user_id = ? ORDER BY catalog_order ASC LIMIT ?, ?'
+            : 'SELECT * FROM categories WHERE status="ativo" AND user_id = ? ORDER BY catalog_order ASC LIMIT ?, ?';
+
+        const [results] = await connection.query(dataQuery, [user_id, offset, pageSize]);
         connection.release();
 
-        Logmessage('Lista de categorias recuperada do banco de dados:'+ JSON.stringify(results));
+        Logmessage(`Lista de categorias recuperada (${mode === "backoffice" ? "Backoffice" : "Padrão"}): ` + JSON.stringify(results));
 
         // Definir o cabeçalho X-Total-Count para enviar o total de resultados
         res.header('X-Total-Count', totalCount[0].total);
@@ -161,7 +162,8 @@ simpleListAllCategories = async (req, res) => {
         Logmessage('Erro ao recuperar a lista de categories do banco de dados:', error);
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
-}
+};
+
 
 
 const reorderCategory = async (req, res) => {
