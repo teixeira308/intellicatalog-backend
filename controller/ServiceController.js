@@ -171,7 +171,6 @@ const GetServiceByUserId = async (req, res) => {
        Logmessage('Erro ao consultar serviço no banco de dados:', {
             message: error.message, // Mensagem do erro
             stack: error.stack, // Stack trace para diagnóstico
-            serviceData: serviceData, // Dados do body que causaram o erro
         });
         res.status(500).json({ message: 'Erro consultar do servidor', error: error.message });
     }
