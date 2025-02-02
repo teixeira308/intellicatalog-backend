@@ -18,10 +18,16 @@ const createService = async (req, res) => {
         Logmessage('Dados do serviço inseridos no banco de dados:', serviceWithUserId);
         res.status(201).json({ id: result.insertId, ...serviceWithUserId });
     } catch (error) {
-        Logmessage('Erro ao inserir serviço no banco de dados:', error);
-        res.status(500).json({ message: 'Erro interno do servidor' });
+        // Melhorando o log de erro
+        Logmessage('Erro ao inserir serviço no banco de dados:', {
+            message: error.message, // Mensagem do erro
+            stack: error.stack, // Stack trace para diagnóstico
+            serviceData: serviceData, // Dados do body que causaram o erro
+        });
+        res.status(500).json({ message: 'Erro interno do servidor', error: error.message });
     }
 };
+
 
 
 // Listar todos os serviços
