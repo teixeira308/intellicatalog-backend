@@ -104,26 +104,36 @@ deleteCategory = async (req, res) => {
 
 
 getCategory = async (req, res) => {
-    const { id } = req.params; // Captura o ID da pessoa da URL
-    Logmessage("Consulta Categoria: "+id)
+    const { id } = req.params; // Captura o ID da categoria da URL
+    const mode = req.query.mode; // Captura o mode como string
+
+    Logmessage("Consulta Categoria: " + id + " | Modo: " + (mode === "backoffice" ? "Backoffice" : "Padrão"));
+
     try {
         const connection = await pool.getConnection();
-        const [category] = await connection.query('SELECT * FROM categories WHERE status="ativo" and id = ?', id); // Consulta uma pessoa com base no ID
+
+        // Define a query com ou sem o filtro de status
+        const query = mode === "backoffice"
+            ? 'SELECT * FROM categories WHERE id = ?' // Se mode=backoffice, não filtra por status
+            : 'SELECT * FROM categories WHERE status="ativo" AND id = ?'; // Se não, mantém o filtro status="ativo"
+
+        const [category] = await connection.query(query, [id]); // Executa a query com o ID passado
         connection.release();
 
-        if (category.length === 0) { // Se não houver pessoa com o ID especificado, retorna 404
+        if (category.length === 0) { // Se não houver categoria com o ID especificado, retorna 404
             return res.status(404).json({ message: 'Category não encontrada' });
         }
 
-        Logmessage('Category recuperada do banco de dados:'+ JSON.stringify(category));
+        Logmessage('Category recuperada do banco de dados: ' + JSON.stringify(category));
 
-        // Retorna a pessoa encontrada
+        // Retorna a categoria encontrada
         res.status(200).json(category[0]);
     } catch (error) {
-        Logmessage('Erro ao recuperar a Category do banco de dados:'+ error);
+        Logmessage('Erro ao recuperar a Category do banco de dados: ' + error);
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
-}
+};
+
 
 simpleListAllCategories = async (req, res) => {
     const page = parseInt(req.query.page) || 1; // Página atual (padrão: 1)
