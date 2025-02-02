@@ -168,8 +168,12 @@ const GetServiceByUserId = async (req, res) => {
         Logmessage('Serviços recuperados do banco de dados:', services);
         res.status(200).json(services);
     } catch (error) {
-        Logmessage('Erro ao recuperar serviços do banco de dados:', error);
-        res.status(500).json({ message: 'Erro interno do servidor' });
+       Logmessage('Erro ao consultar serviço no banco de dados:', {
+            message: error.message, // Mensagem do erro
+            stack: error.stack, // Stack trace para diagnóstico
+            serviceData: serviceData, // Dados do body que causaram o erro
+        });
+        res.status(500).json({ message: 'Erro consultar do servidor', error: error.message });
     }
 };
 
