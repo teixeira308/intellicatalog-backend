@@ -54,28 +54,22 @@ const GetAllServices = async (req, res) => {
 
 // Atualizar um serviço (apenas os campos informados)
 const UpdateService = async (req, res) => {
-    const { id } = req.params; // ID do serviço
-    const updates = req.body; // Dados a serem atualizados
-
-    Logmessage('Dados para atualização:', updates);
+    const { id } = req.params; // Captura o ID do serviço
+    const newData = req.body; // Novos dados do serviço a serem atualizados
 
     try {
         const connection = await pool.getConnection();
 
-        // Itera sobre o objeto `updates` para pegar o campo e o valor
-        const [field, value] = Object.entries(updates)[0]; 
-
-        // Executar a query de atualização
-        const updateQuery = `UPDATE services SET ${field} = ? WHERE id = ?`;
-        const [result] = await connection.query(updateQuery, [value, id]);
-
+        // Atualiza os dados diretamente
+        const [result] = await connection.query('UPDATE services SET ? WHERE id = ?', [newData, id]);
         connection.release();
 
+        // Se nenhum registro for afetado, o serviço não foi encontrado
         if (result.affectedRows === 0) {
-            return res.status(404).json({ message: 'Serviço não encontrado ou nada foi alterado' });
+            return res.status(404).json({ message: 'Serviço não encontrado' });
         }
 
-        Logmessage('Dados do serviço atualizados no banco de dados:', { id, field, value });
+        Logmessage('Serviço ID: ' + id + ' atualizado com sucesso:', newData);
         res.status(200).json({ message: 'Serviço atualizado com sucesso' });
     } catch (error) {
         Logmessage('Erro ao atualizar serviço no banco de dados: ' + error);
