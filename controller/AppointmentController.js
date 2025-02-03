@@ -4,6 +4,7 @@ const { Logmessage } = require('../helper/Tools.js');
 // Criar agendamento
 const createAppointments = async (req, res) => {
     const { service_id, availability_id, obs, status } = req.body;
+    const userId = req.user.userId;
     Logmessage("Criando agendamento, dados do body:", req.body);
 
     let connection;
@@ -28,8 +29,8 @@ const createAppointments = async (req, res) => {
 
         // Inserir agendamento
         const [appointmentResult] = await connection.query(
-            'INSERT INTO appointments (service_id, availability_id, obs, status) VALUES (?, ?, ?, ?)', 
-            [service_id, availability_id, obs, status || 'pending']
+            'INSERT INTO appointments (service_id, availability_id, obs, status,user_id) VALUES (?, ?, ?, ?,?)', 
+            [service_id, availability_id, obs, status || 'pending',userId]
         );
 
         // Atualizar o status da disponibilidade
@@ -73,9 +74,10 @@ const createAppointments = async (req, res) => {
 
 // Listar todos os agendamentos
 const GetAllAppointments = async (req, res) => {
+    const userId = req.user.userId;
     try {
         const connection = await pool.getConnection();
-        const [appointments] = await connection.query('SELECT * FROM appointments');
+        const [appointments] = await connection.query('SELECT * FROM appointments where user_id = ?',userId);
         connection.release();
 
         Logmessage('Lista de agendamentos recuperada do banco de dados:', appointments);
@@ -187,12 +189,12 @@ const DeleteAppointments = async (req, res) => {
 
 
 // Obter um agendamento específico
-const GetAppointments = async (req, res) => {
+const GetAppointment = async (req, res) => {
     const { id } = req.params;
-
+    const userId = req.user.userId;
     try {
         const connection = await pool.getConnection();
-        const [appointment] = await connection.query('SELECT * FROM appointments WHERE id = ?', [id]);
+        const [appointment] = await connection.query('SELECT * FROM appointments WHERE id = ? and user_id = ?', [id,userId]);
         connection.release();
 
         if (appointment.length === 0) {
@@ -212,5 +214,5 @@ module.exports = {
     GetAllAppointments,
     UpdateAppointments,
     DeleteAppointments,
-    GetAppointments
+    GetAppointment
 };

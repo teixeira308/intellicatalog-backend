@@ -10,6 +10,6 @@ router.post('/appointments', login.required, AppointmentsController.createAppoin
 router.get('/appointments', login.required, AppointmentsController.GetAllAppointments);
 router.put('/appointments/:id', login.required, AppointmentsController.UpdateAppointments);
 router.delete('/appointments/:id', login.required, AppointmentsController.DeleteAppointments);
-router.get('/appointments/:id', login.required, AppointmentsController.GetAppointments);
+router.get('/appointments/:id', login.required, AppointmentsController.GetAppointment);
 
 module.exports = router;
