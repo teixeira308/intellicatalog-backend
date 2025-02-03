@@ -4,7 +4,7 @@ const { Logmessage } = require('../helper/Tools.js');
 // Criar agendamento
 const createAppointments = async (req, res) => {
     const { service_id, availability_id, obs, status } = req.body;
-    const userId = req.user.userId;
+    
     Logmessage("Criando agendamento, dados do body:", req.body);
 
     let connection;
@@ -29,8 +29,8 @@ const createAppointments = async (req, res) => {
 
         // Inserir agendamento
         const [appointmentResult] = await connection.query(
-            'INSERT INTO appointments (service_id, availability_id, obs, status,user_id) VALUES (?, ?, ?, ?,?)', 
-            [service_id, availability_id, obs, status || 'pending',userId]
+            'INSERT INTO appointments (service_id, availability_id, obs, status,user_id) VALUES (?, ?, ?, ?)', 
+            [service_id, availability_id, obs, status || 'pending']
         );
 
         // Atualizar o status da disponibilidade
@@ -74,10 +74,10 @@ const createAppointments = async (req, res) => {
 
 // Listar todos os agendamentos
 const GetAllAppointments = async (req, res) => {
-    const userId = req.user.userId;
+    
     try {
         const connection = await pool.getConnection();
-        const [appointments] = await connection.query('SELECT * FROM appointments where user_id = ?',userId);
+        const [appointments] = await connection.query('SELECT * FROM appointments');
         connection.release();
 
         Logmessage('Lista de agendamentos recuperada do banco de dados:', appointments);
