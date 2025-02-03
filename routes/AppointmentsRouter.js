@@ -11,5 +11,6 @@ router.get('/appointments', login.required, AppointmentsController.GetAllAppoint
 router.put('/appointments/:id', login.required, AppointmentsController.UpdateAppointments);
 router.delete('/appointments/:id', login.required, AppointmentsController.DeleteAppointments);
 router.get('/appointments/:id', login.required, AppointmentsController.GetAppointment);
+router.get('/appointments/availability/:id', login.required, AppointmentsController.GetAppointmentByAvailability);
 
 module.exports = router;

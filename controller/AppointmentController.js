@@ -191,10 +191,31 @@ const DeleteAppointments = async (req, res) => {
 // Obter um agendamento específico
 const GetAppointment = async (req, res) => {
     const { id } = req.params;
-    const userId = req.user.userId;
+    
     try {
         const connection = await pool.getConnection();
-        const [appointment] = await connection.query('SELECT * FROM appointments WHERE id = ? and user_id = ?', [id,userId]);
+        const [appointment] = await connection.query('SELECT * FROM appointments WHERE id = ?', [id]);
+        connection.release();
+
+        if (appointment.length === 0) {
+            return res.status(404).json({ message: 'Agendamento não encontrado' });
+        }
+
+        Logmessage('Agendamento recuperado do banco de dados:', appointment);
+        res.status(200).json(appointment[0]);
+    } catch (error) {
+        Logmessage('Erro ao recuperar agendamento do banco de dados: ' + error);
+        res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+};
+
+// Obter um agendamento específico
+const GetAppointmentByAvailability = async (req, res) => {
+    const { availability_id } = req.params;
+    
+    try {
+        const connection = await pool.getConnection();
+        const [appointment] = await connection.query('SELECT * FROM appointments WHERE availability_id = ?', [availability_id]);
         connection.release();
 
         if (appointment.length === 0) {
@@ -214,5 +235,6 @@ module.exports = {
     GetAllAppointments,
     UpdateAppointments,
     DeleteAppointments,
-    GetAppointment
+    GetAppointment,
+    GetAppointmentByAvailability
 };
