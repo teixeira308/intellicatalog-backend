@@ -27,7 +27,7 @@ CreateAvaliability = async (req, res) => {
 // Listar todas as disponibilidades
 GetAllAvaliability = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
-    const pageSize = parseInt(req.query.pageSize) || 10;
+    const pageSize = parseInt(req.query.pageSize) || 100;
     const userId = req.user.userId;
 
     try {
