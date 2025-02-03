@@ -2,13 +2,18 @@ const pool = require('../config/dbConfig.js');
 const { Logmessage } = require('../helper/Tools.js');
 
 // Criar disponibilidade
-createAvaliability = async (req, res) => {
+CreateAvaliability = async (req, res) => {
     const data = req.body;
+    const userId = req.user.userId;
+    const dataWithUserId = {
+        ...data,
+        user_id: userId
+    }
     Logmessage("Criando disponibilidade, dados do body:", data);
 
     try {
         const connection = await pool.getConnection();
-        const [result] = await connection.query('INSERT INTO availability SET ?', data);
+        const [result] = await connection.query('INSERT INTO availability SET ?', dataWithUserId);
         connection.release();
 
         Logmessage('Dados da disponibilidade inseridos no banco de dados:', data);
@@ -140,5 +145,5 @@ module.exports = {
     UpdateAvaliability,
     GetAvaliability,
     GetAllAvaliability,
-    createAvaliability
+    CreateAvaliability
 };
