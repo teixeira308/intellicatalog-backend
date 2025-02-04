@@ -8,21 +8,25 @@ CreateAvaliability = async (req, res) => {
     const dataWithUserId = {
         ...data,
         user_id: userId
-    }
-    Logmessage("Criando disponibilidade, dados do body:", data);
+    };
+
+    Logmessage(`[DISPONIBILIDADE] Tentando criar disponibilidade para o usuário ${userId}`);
+    Logmessage(`[DISPONIBILIDADE] Dados recebidos: ${JSON.stringify(data, null, 2)}`);
 
     try {
         const connection = await pool.getConnection();
         const [result] = await connection.query('INSERT INTO availability SET ?', dataWithUserId);
         connection.release();
 
-        Logmessage('Dados da disponibilidade inseridos no banco de dados:', data);
+        Logmessage(`[DISPONIBILIDADE] Disponibilidade criada com sucesso! ID: ${result.insertId}`);
         res.status(201).json({ id: result.insertId, ...data });
     } catch (error) {
-        Logmessage('Erro ao criar disponibilidade no banco de dados:', error);
+        Logmessage(`[ERRO DISPONIBILIDADE] Falha ao criar disponibilidade para o usuário ${userId}`);
+        Logmessage(`[ERRO DISPONIBILIDADE] Detalhes do erro: ${error.message}`);
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
-}
+};
+
 
 // Listar todas as disponibilidades
 GetAllAvaliability = async (req, res) => {
