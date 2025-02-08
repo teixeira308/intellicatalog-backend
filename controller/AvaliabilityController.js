@@ -36,11 +36,11 @@ GetAllAvaliability = async (req, res) => {
 
     try {
         const connection = await pool.getConnection();
-        const [totalCount] = await connection.query('SELECT COUNT(*) as total FROM availability where user_id = ?',[userId]);
+        const [totalCount] = await connection.query('SELECT COUNT(*) as total FROM availability where user_id = ? ',[userId]);
         const offset = (page - 1) * pageSize;
         const totalPages = Math.ceil(totalCount[0].total / pageSize);
 
-        const [results] = await connection.query('SELECT * FROM availability where user_id = ? LIMIT ?, ?', [userId,offset, pageSize]);
+        const [results] = await connection.query('SELECT * FROM availability where user_id = ? order by date  LIMIT ?, ?', [userId,offset, pageSize]);
         connection.release();
 
         res.header('X-Total-Count', totalCount[0].total);
