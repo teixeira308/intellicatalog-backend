@@ -212,7 +212,7 @@ const GetAppointment = async (req, res) => {
 // Obter um agendamento específico
 const GetAppointmentByAvailability = async (req, res) => {
     const { availability_id } = req.params;
-    
+    Logmessage("consulta agendamentos por disponibilidade id:"+availability_id)
     try {
         const connection = await pool.getConnection();
         const [appointment] = await connection.query('SELECT * FROM appointments WHERE availability_id = ?', [availability_id]);
