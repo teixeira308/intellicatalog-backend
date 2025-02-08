@@ -29,7 +29,7 @@ const createAppointments = async (req, res) => {
 
         // Inserir agendamento
         const [appointmentResult] = await connection.query(
-            'INSERT INTO appointments (service_id, availability_id, obs, status) VALUES (?, ?, ?)', 
+            'INSERT INTO appointments (service_id, availability_id, obs, status) VALUES (?, ?, ?,?)', 
             [service_id, availability_id, obs, status || 'pending']
         );
 
