@@ -164,6 +164,10 @@ const createStoreConfigs = async (req, res) => {
 const alterStoreConfigs = async (req, res) => {
     const { id } = req.params; // Captura o ID do parâmetro da rota
     const newData = req.body; // Novos dados da pessoa a serem atualizados
+
+    if (newData.taxa_entrega !== undefined) {
+        newData.taxa_entrega = parseFloat(newData.taxa_entrega.toString().replace(',', '.')) || 0;
+    }
     
     try {
         // Verifica se o registro com o ID especificado existe
