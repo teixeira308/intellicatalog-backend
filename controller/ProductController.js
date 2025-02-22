@@ -209,5 +209,32 @@ const reorderProducts = async (req, res) => {
     }
 };
 
+const reorderProductImages = async (req, res) => {
+    const { imagens } = req.body; // Espera-se um array de imagens com id e nova ordem
 
-module.exports = { createProduct, listAllProducts, alterProduct, deleteProduct, getProduct, simpleListAllProducts,reorderProducts }
+    try {
+        const connection = await pool.getConnection();
+
+        // Inicia a transação
+        await connection.beginTransaction();
+
+        // Atualiza a ordem das imagens
+        for (const imagem of imagens) {
+            await connection.query('UPDATE products_images SET image_product_order = ? WHERE id = ?', [imagem.image_product_order, imagem.id]);
+        }
+
+        // Confirma a transação
+        await connection.commit();
+        connection.release();
+
+        console.log('Ordem das fotos atualizada com sucesso');
+        res.status(200).json({ message: 'Ordem das fotos atualizada com sucesso.' });
+    } catch (error) {
+        // Reverte a transação em caso de erro
+        await connection.rollback();
+        console.error('Erro ao atualizar a ordem das fotos:', error);
+        res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+};
+
+module.exports = { createProduct, listAllProducts, alterProduct, deleteProduct, getProduct, simpleListAllProducts,reorderProducts,reorderProductImages }
