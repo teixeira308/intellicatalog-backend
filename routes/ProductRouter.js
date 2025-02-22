@@ -13,6 +13,7 @@ router.get('/products/details/:id', login.required, ProductController.getProduct
 router.delete('/products/:id', login.required,ProductController.deleteProduct); 
 router.put('/products/reorder', login.required,ProductController.reorderProducts);
 router.put('/products/:id', login.required,ProductController.alterProduct);
+router.put('/products/reorder-images', login.required,ProductController.reorderProductImages);
 
 
 module.exports = router;
