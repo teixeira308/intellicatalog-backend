@@ -176,7 +176,7 @@
         try {
             // Consultar templates no banco de dados com base no ID do usuário
             const connection = await pool.getConnection();
-            const [rows] = await connection.query('SELECT * FROM products_images WHERE user_id = ?', [userId]);
+            const [rows] = await connection.query('SELECT * FROM products_images WHERE user_id = ? order by image_product_order asc', [userId]);
             connection.release();
         
             res.status(200).json(rows);
