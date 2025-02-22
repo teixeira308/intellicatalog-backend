@@ -9,7 +9,7 @@ const ProductController = require('../controller/ProductController');
 router.post('/products', login.required, ProductController.createProduct ); 
 router.get('/products/:user_id', login.required, ProductController.listAllProducts );
 router.get('/products/category/:category_id',login.required, ProductController.simpleListAllProducts );
-router.get('/products/:id', login.required, ProductController.getProduct );
+router.get('/products/details/:id', login.required, ProductController.getProduct );
 router.delete('/products/:id', login.required,ProductController.deleteProduct); 
 router.put('/products/reorder', login.required,ProductController.reorderProducts);
 router.put('/products/:id', login.required,ProductController.alterProduct);
