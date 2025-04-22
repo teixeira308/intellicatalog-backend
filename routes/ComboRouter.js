@@ -1,8 +1,8 @@
-// routes/comboRoutes.js
+
 
 const express = require('express');
 const router = express.Router();
-const login = require('../middleware/login');
+const login = require('../midlleware/login');
 const ComboController = require('../controller/ComboController');
 
 // Rota para criar um novo combo
