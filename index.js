@@ -12,6 +12,7 @@ const AvailabilityRouter = require('./routes/AvailabilityRouter');
 const AppointmentsRouter = require('./routes/AppointmentsRouter');
 const OrdersRouter = require('./routes/OrderRoutes');
 const ComboRouter = require('./routes/ComboRouter');
+const ComboProdutoRouter = require('./routes/ComboProdutoRouter');
 
 // Middleware para analisar o corpo das solicitações e habilitar CORS
 app.use(express.json());
@@ -30,6 +31,7 @@ app.use('/intellicatalog/v1/', AvailabilityRouter);
 app.use('/intellicatalog/v1/', AppointmentsRouter);
 app.use('/intellicatalog/v1/', OrdersRouter);
 app.use('/intellicatalog/v1/', ComboRouter);
+app.use('/intellicatalog/v1/', ComboProdutoRouter);
 
 
 app.use((req, res, next) => {
