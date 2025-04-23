@@ -100,16 +100,17 @@ const deleteOpcao = async (req, res) => {
             return res.status(404).json({ message: 'Opção não encontrada' });
         }
 
-        await connection.query('UPDATE opcoes_personalizacao SET status = "inativo" WHERE id = ?', [id]);
+        await connection.query('DELETE FROM opcoes_personalizacao WHERE id = ?', [id]);
         connection.release();
 
-        Logmessage(`Opção ID ${id} marcada como inativa.`);
-        res.status(200).json({ message: 'Opção excluída (inativada)' });
+        Logmessage(`Opção ID ${id} removida do banco de dados.`);
+        res.status(200).json({ message: 'Opção excluída com sucesso' });
     } catch (error) {
         Logmessage('Erro ao excluir opção: ' + error);
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
 };
+
 
 module.exports = {
     createOpcao,
