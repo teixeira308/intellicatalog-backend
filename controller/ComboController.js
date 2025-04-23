@@ -30,7 +30,7 @@ const listAllCombos = async (req, res) => {
         const offset = (page - 1) * pageSize;
         const totalPages = Math.ceil(totalCount[0].total / pageSize);
 
-        const [results] = await connection.query('SELECT * FROM combos ORDER BY order_position ASC LIMIT ?, ?', [offset, pageSize]);
+        const [results] = await connection.query('SELECT * FROM combos ASC LIMIT ?, ?', [offset, pageSize]);
         connection.release();
 
         Logmessage('Lista de combos recuperada do banco de dados: ' + JSON.stringify(results));
@@ -108,34 +108,11 @@ const getCombo = async (req, res) => {
     }
 };
 
-const reorderCombo = async (req, res) => {
-    const { combos } = req.body;
-
-    try {
-        const connection = await pool.getConnection();
-        await connection.beginTransaction();
-
-        for (const combo of combos) {
-            await connection.query('UPDATE combos SET order_position = ? WHERE id = ?', [combo.order_position, combo.id]);
-        }
-
-        await connection.commit();
-        connection.release();
-
-        Logmessage('Ordem dos combos atualizada com sucesso');
-        res.status(200).json({ message: 'Ordem dos combos atualizada com sucesso.' });
-    } catch (error) {
-        await connection.rollback();
-        Logmessage('Erro ao atualizar a ordem dos combos:', error);
-        res.status(500).json({ message: 'Erro interno do servidor' });
-    }
-};
 
 module.exports = {
     createCombo,
     listAllCombos,
     alterCombo,
     deleteCombo,
-    getCombo,
-    reorderCombo
+    getCombo
 };
