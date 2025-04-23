@@ -20,7 +20,5 @@ router.put('/combos/:id', login.required, ComboController.alterCombo);
 // Rota para deletar um combo
 router.delete('/combos/:id', login.required, ComboController.deleteCombo);
 
-// Rota para reordenar os produtos dentro de um combo
-router.put('/combos/reorder', login.required, ComboController.reorderCombo);
 
 module.exports = router;
