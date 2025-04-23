@@ -42,7 +42,7 @@ const listarProdutosDoCombo = async (req, res) => {
         const [produtos] = await connection.query(`
             SELECT p.*
             FROM combo_produtos cp
-            JOIN produtos p ON cp.product_id = p.id
+            JOIN products p ON cp.product_id = p.id
             WHERE cp.combo_id = ?
         `, [combo_id]);
         connection.release();
