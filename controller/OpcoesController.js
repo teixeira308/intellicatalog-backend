@@ -2,7 +2,17 @@ const pool = require('../config/dbConfig');
 const { Logmessage } = require("../helper/Tools");
 
 const createOpcao = async (req, res) => {
-    const opcaoData = req.body;
+    const opcaoData = { ...req.body };
+
+    // Serializa o campo 'valores' se ele existir e for um array/objeto
+    if (opcaoData.valores) {
+        try {
+            opcaoData.valores = JSON.stringify(opcaoData.valores);
+        } catch (err) {
+            return res.status(400).json({ message: 'Erro ao serializar o campo "valores". Verifique o formato.' });
+        }
+    }
+
     Logmessage("Criar opção de personalização: " + JSON.stringify(opcaoData));
 
     try {
@@ -12,12 +22,13 @@ const createOpcao = async (req, res) => {
 
         const insertedId = result.insertId;
         Logmessage('Opção inserida com sucesso. ID: ' + insertedId);
-        res.status(201).json({ id: insertedId, ...opcaoData });
+        res.status(201).json({ id: insertedId, ...req.body }); // devolve o original (sem JSON string)
     } catch (error) {
         Logmessage('Erro ao criar opção: ' + error);
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
 };
+
 
 const listAllOpcoes = async (req, res) => {
     try {
