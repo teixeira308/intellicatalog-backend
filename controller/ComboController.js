@@ -30,7 +30,7 @@ const listAllCombos = async (req, res) => {
         const offset = (page - 1) * pageSize;
         const totalPages = Math.ceil(totalCount[0].total / pageSize);
 
-        const [results] = await connection.query('SELECT * FROM combos ASC LIMIT ?, ?', [offset, pageSize]);
+        const [results] = await connection.query('SELECT * FROM combos LIMIT ?, ?', [offset, pageSize]);
         connection.release();
 
         Logmessage('Lista de combos recuperada do banco de dados: ' + JSON.stringify(results));
