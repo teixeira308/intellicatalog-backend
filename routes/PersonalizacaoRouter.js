@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const personalizacaoController = require('../controllers/personalizacaoController');
+const personalizacaoController = require('../controllers/PersonalizacaoController');
 
 // Criar personalização
 router.post('/personalizacoes', personalizacaoController.createPersonalizacao);
