@@ -15,4 +15,8 @@ router.put('/catalogo-order/:id', login.required, CatalogoOrdemController.update
 // Deletar item do catálogo
 router.delete('/catalogo-order/:id', login.required, CatalogoOrdemController.deleteCatalogoItem);
 
+// Reordenar todos os itens (array com { id, ordem })
+router.put('/catalogo/reorder', login.required, CatalogoOrdemController.reorderCatalogo);
+
+
 module.exports = router;

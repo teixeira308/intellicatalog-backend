@@ -85,9 +85,32 @@ const deleteCatalogoItem = async (req, res) => {
     }
 };
 
+const reorderCatalogo = async (req, res) => {
+    const itens = req.body; // array de objetos: [{ id, ordem }]
+    if (!Array.isArray(itens)) {
+        return res.status(400).json({ message: "Dados inválidos. Esperado um array de objetos." });
+    }
+
+    try {
+        const connection = await pool.getConnection();
+        const updatePromises = itens.map(item => {
+            return connection.query('UPDATE catalogo_ordem SET ordem = ? WHERE id = ?', [item.ordem, item.id]);
+        });
+
+        await Promise.all(updatePromises);
+        connection.release();
+
+        res.status(200).json({ message: "Ordem atualizada com sucesso" });
+    } catch (error) {
+        Logmessage("Erro ao reordenar catálogo: " + error);
+        res.status(500).json({ message: "Erro interno do servidor" });
+    }
+};
+
 module.exports = {
     createCatalogoItem,
     listCatalogo,
     updateCatalogoItem,
-    deleteCatalogoItem
+    deleteCatalogoItem,
+    reorderCatalogo
 };
