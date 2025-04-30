@@ -15,6 +15,7 @@ const ComboRouter = require('./routes/ComboRouter');
 const ComboProdutoRouter = require('./routes/ComboProdutoRouter');
 const OpcoesRouter = require('./routes/OpcoesRouter');
 const PersonalizacaoRouter = require('./routes/PersonalizacaoRouter');
+const CatalogoOrdemController = require('./routes/CatalogoOrderRouter')
 
 // Middleware para analisar o corpo das solicitações e habilitar CORS
 app.use(express.json());
@@ -36,7 +37,7 @@ app.use('/intellicatalog/v1/', ComboRouter);
 app.use('/intellicatalog/v1/', ComboProdutoRouter);
 app.use('/intellicatalog/v1/', OpcoesRouter);
 app.use('/intellicatalog/v1/', PersonalizacaoRouter);
-
+app.use('/intellicatalog/v1/',CatalogoOrdemController);
 
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
