@@ -7,7 +7,7 @@ const addProdutoAoCombo = async (req, res) => {
 
     try {
         const connection = await pool.getConnection();
-        await connection.query('INSERT INTO combo_produtos (combo_id, product_id) VALUES (?, ?)', [combo_id, product_id]);
+        await connection.query('INSERT INTO combo_produtos (combo_id, product_id,tipo,min,max) VALUES (?, ?,?,?,?)', [combo_id, product_id]);
         connection.release();
 
         res.status(201).json({ message: 'Produto adicionado ao combo com sucesso.' });
