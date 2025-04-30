@@ -235,7 +235,7 @@ Login = async (req, res, next) => {
                 return res.status(200).send({
                     message: 'Autenticado com sucesso',
                     userId: user.id,
-                    username: user.username,
+                    nome: user.nome,
                     token: token
                 });
             } else {
