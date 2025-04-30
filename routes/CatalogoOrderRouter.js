@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const login = require('../midlleware/login');
-const CatalogoOrdemController = require('../controller/catalogoOrderController');
+const CatalogoOrdemController = require('../controller/CatalogoOrderController');
 
 // Criar item no catálogo (combo ou produto)
 router.post('/catalogo-order', login.required, CatalogoOrdemController.createCatalogoItem);
