@@ -2,7 +2,7 @@ const pool = require('../config/dbConfig');
 const { Logmessage } = require("../helper/Tools");
 
 const addProdutoAoCombo = async (req, res) => {
-    const { combo_id, product_id } = req.body;
+    const { combo_id, product_id,tipo,min,max } = req.body;
     Logmessage(`Adicionando produto ${product_id} ao combo ${combo_id}`);
 
     try {
