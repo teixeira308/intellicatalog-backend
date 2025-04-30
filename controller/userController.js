@@ -14,7 +14,7 @@ createUser = async (req, res, next) => {
 
     try {
 
-        const { email, password } = req.body;
+        const { email, password, nome } = req.body;
         Logmessage("Criar usuario", email)
         // Verificar se o email já está cadastrado
         const [existingUser] = await pool.execute('SELECT * FROM users_catalog WHERE email = ?', [email]);
@@ -26,7 +26,7 @@ createUser = async (req, res, next) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         // Inserir o usuário no banco de dados
-        const query = 'INSERT INTO users_catalog (email,password) VALUES (?,?)';
+        const query = 'INSERT INTO users_catalog (email,password,nome) VALUES (?,?,?)';
         const connection = await pool.getConnection();
         const results = await connection.execute(query, [email, hashedPassword]);
         connection.release();
