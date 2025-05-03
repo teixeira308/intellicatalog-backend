@@ -28,7 +28,6 @@ const listCatalogo = async (req, res) => {
             FROM catalogo_ordem co
             LEFT JOIN combos c ON co.tipo = 'combo' AND co.referencia_id = c.id
             LEFT JOIN products p ON co.tipo = 'produto' AND co.referencia_id = p.id
-            WHERE co.status = 'ativo'
             ORDER BY co.ordem ASC
         `);
         connection.release();
