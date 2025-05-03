@@ -24,7 +24,7 @@ const listCatalogo = async (req, res) => {
         const connection = await pool.getConnection();
         const [items] = await connection.query(`
             SELECT co.*, 
-                   CASE WHEN co.tipo = 'combo' THEN c.titulo ELSE p.titulo END AS titulo
+                   CASE WHEN co.tipo = 'combo' THEN c.nome ELSE p.titulo END AS titulo
             FROM catalogo_ordem co
             LEFT JOIN combos c ON co.tipo = 'combo' AND co.referencia_id = c.id
             LEFT JOIN products p ON co.tipo = 'produto' AND co.referencia_id = p.id
