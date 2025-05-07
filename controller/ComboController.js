@@ -7,17 +7,40 @@ const createCombo = async (req, res) => {
 
     try {
         const connection = await pool.getConnection();
+
+        // 1. Insere o combo na tabela `combos`
         const [result] = await connection.query('INSERT INTO combos SET ?', comboData);
+        const insertedComboId = result.insertId;
+        Logmessage('Combo inserido com ID: ' + insertedComboId);
+
+        // 2. Busca a maior ordem atual na tabela `catalogo_ordem` para tipo = 'combo'
+        const [ordemResult] = await connection.query(`
+            SELECT MAX(ordem) AS maxOrdem
+            FROM catalogo_ordem
+            WHERE tipo = 'combo'
+        `);
+
+        const novaOrdem = (ordemResult[0].maxOrdem || 0) + 1;
+
+        // 3. Insere na tabela `catalogo_ordem` com tipo = 'combo'
+        const catalogItem = {
+            tipo: 'combo',
+            referencia_id: insertedComboId,
+            ordem: novaOrdem
+        };
+        await connection.query('INSERT INTO catalogo_ordem SET ?', catalogItem);
+        Logmessage('Item do combo inserido no catálogo: ' + JSON.stringify(catalogItem));
+
         connection.release();
 
-        const insertedId = result.insertId;
-        Logmessage('Dados do combo inseridos no banco de dados. ID: ' + insertedId);
-        res.status(201).json({ id: insertedId, ...comboData });
+        // 4. Retorna a resposta com sucesso
+        res.status(201).json({ id: insertedComboId, ...comboData });
     } catch (error) {
-        Logmessage('Erro ao inserir dados do combo no banco de dados: ' + error);
+        Logmessage('Erro ao criar combo e adicionar ao catálogo: ' + error);
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
 };
+
 
 const listAllCombos = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
