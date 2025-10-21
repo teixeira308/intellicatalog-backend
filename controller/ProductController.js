@@ -2,54 +2,38 @@
 const pool = require('../config/dbConfig');
 const {Logmessage} = require( "../helper/Tools");
 
+
 createProduct = async (req, res) => {
     const productData = req.body;
-    Logmessage("Criar produto, dados do body: " + JSON.stringify(productData));
+    Logmessage("Criar produto, dados do body: "+ JSON.stringify(productData));
 
     try {
         const categoryId = productData.category_id;
 
-        // Verifica se a categoria existe
+        // Verifica se a categoria com o ID fornecido existe
         const categoryExists = await checkCategoryExists(categoryId);
+
         if (!categoryExists) {
+            // Retorna uma resposta indicando que a categoria não existe
             return res.status(400).json({ message: 'A categoria fornecida não existe.' });
         }
 
         const connection = await pool.getConnection();
-
-        // 1. Insere o produto
         const [result] = await connection.query('INSERT INTO products SET ?', productData);
-        const insertedProductId = result.insertId;
-        Logmessage('Produto criado com ID: ' + insertedProductId);
-
-        // 2. Encontra a maior ordem atual na categoria
-        const [ordemResult] = await connection.query(`
-            SELECT MAX(co.ordem) AS maxOrdem
-            FROM catalogo_ordem co
-            JOIN products p ON co.referencia_id = p.id
-            WHERE co.tipo = 'produto' AND p.category_id = ?
-        `, [categoryId]);
-
-        const novaOrdem = (ordemResult[0].maxOrdem || 0) + 1;
-
-        // 3. Insere na catalogo_ordem
-        const catalogItem = {
-            tipo: 'produto',
-            referencia_id: insertedProductId,
-            ordem: novaOrdem
-        };
-        await connection.query('INSERT INTO catalogo_ordem SET ?', catalogItem);
-        Logmessage('Item inserido no catálogo: ' + JSON.stringify(catalogItem));
-
         connection.release();
 
-        res.status(201).json({ id: insertedProductId, ...productData });
+        // 'result' contém informações sobre a inserção, incluindo o ID gerado
+        const insertedId = result.insertId; // Aqui está o ID gerado automaticamente pelo MySQL
+
+        Logmessage('Dados do produto inseridos no banco de dados. ID: ' + insertedId);
+        
+        // Retorna os dados do produto com o ID inserido
+        res.status(201).json({ id: insertedId, ...productData });
     } catch (error) {
-        Logmessage('Erro ao criar produto e adicionar ao catálogo: ' + error);
+        Logmessage('Erro ao inserir dados do produto no banco de dados: ' + error);
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
 }
-
 
 // Função para verificar se a categoria existe
 async function checkCategoryExists(categoryId) {
@@ -254,3 +238,4 @@ const reorderProductImages = async (req, res) => {
 };
 
 module.exports = { createProduct, listAllProducts, alterProduct, deleteProduct, getProduct, simpleListAllProducts,reorderProducts,reorderProductImages }
+
