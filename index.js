@@ -11,6 +11,7 @@ const ServicesRouter = require('./routes/ServicesRouter');
 const AvailabilityRouter = require('./routes/AvailabilityRouter');
 const AppointmentsRouter = require('./routes/AppointmentsRouter');
 const OrdersRouter = require('./routes/OrderRoutes');
+const SubItemRouter = require('./routes/SubItemsRouter');
 
 
 // Middleware para analisar o corpo das solicitações e habilitar CORS
@@ -29,6 +30,7 @@ app.use('/intellicatalog/v1/', ServicesRouter);
 app.use('/intellicatalog/v1/', AvailabilityRouter);
 app.use('/intellicatalog/v1/', AppointmentsRouter);
 app.use('/intellicatalog/v1/', OrdersRouter);
+app.use('/intellicatalog/v1/', SubItemRouter);
 
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
