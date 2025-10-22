@@ -149,11 +149,70 @@ const reorderSubItems = async (req, res) => {
     }
 };
 
+// Lista todos os subitens de um produto pai
+const listByParentProduct = async (req, res) => {
+    const { id } = req.params; // ID do produto pai
+    Logmessage(`Listar subitens do produto pai ID: ${id}`);
+
+    try {
+        const connection = await pool.getConnection();
+
+        // Faz o join para trazer dados do produto filho também
+        const [rows] = await connection.query(`
+            SELECT 
+                ps.id AS subitem_id,
+                ps.parent_product_id,
+                ps.child_product_id,
+                ps.group_name,
+                ps.item_order,
+                ps.quantity,
+                ps.optional,
+                ps.max_selectable,
+                ps.price_modifier,
+                ps.type,
+                p.titulo AS child_title,
+                p.price AS child_price,
+                p.promocional_price AS child_promo_price,
+                p.brand AS child_brand,
+                p.unit AS child_unit,
+                p.status AS child_status
+            FROM product_subitems ps
+            LEFT JOIN products p ON ps.child_product_id = p.id
+            WHERE ps.parent_product_id = ?
+            ORDER BY ps.group_name ASC, ps.item_order ASC
+        `, [id]);
+
+        connection.release();
+
+        if (rows.length === 0) {
+            return res.status(200).json({ message: "Nenhum subitem encontrado", data: [] });
+        }
+
+        // Agrupa por group_name (ex: "Bebidas", "Acompanhamentos", etc.)
+        const grouped = rows.reduce((acc, item) => {
+            if (!acc[item.group_name]) acc[item.group_name] = [];
+            acc[item.group_name].push(item);
+            return acc;
+        }, {});
+
+        res.status(200).json({
+            parent_product_id: id,
+            total_groups: Object.keys(grouped).length,
+            data: grouped
+        });
+
+    } catch (error) {
+        Logmessage('Erro ao listar subitens: ' + error);
+        res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+};
+
 module.exports = {
     createSubItem,
     listSubItems,
     getSubItem,
     updateSubItem,
     deleteSubItem,
-    reorderSubItems
+    reorderSubItems,
+    listByParentProduct
 };

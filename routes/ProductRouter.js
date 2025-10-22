@@ -4,6 +4,7 @@ const express = require('express');
 const router = express.Router();
 const login = require('../midlleware/login');
 const ProductController = require('../controller/ProductController');
+const SubItemsController = require('../controller/SubItemsController');
 
 // Rota para receber dados de um candidato
 router.post('/products', login.required, ProductController.createProduct ); 
@@ -14,6 +15,8 @@ router.delete('/products/:id', login.required,ProductController.deleteProduct);
 router.put('/products/reorder-images', login.required,ProductController.reorderProductImages);
 router.put('/products/reorder', login.required,ProductController.reorderProducts);
 router.put('/products/:id', login.required,ProductController.alterProduct);
+router.get('/products/:id/subitems', login.required, SubItemsController.listByParentProduct);
+
 
 
 module.exports = router;
